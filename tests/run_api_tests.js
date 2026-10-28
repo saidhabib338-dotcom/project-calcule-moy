@@ -23,11 +23,11 @@ async function ensureServer() {
       stdio: 'ignore',
       detached: false
     });
-    for (let i = 0; i < 20; i++) {
-      await new Promise(r => setTimeout(r, 300));
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 400));
       try {
-        const res = await fetch(`${BASE_URL}/api/v1/matieres`, { signal: AbortSignal.timeout(500) });
-        if (res.status) {
+        const res = await fetch(`${BASE_URL}/api/v1/matieres`, { signal: AbortSignal.timeout(1000) });
+        if (res && res.status) {
           console.log(`✅ Serveur prêt sur ${BASE_URL}.\n`);
           return;
         }

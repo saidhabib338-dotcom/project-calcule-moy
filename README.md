@@ -120,13 +120,9 @@ La conception respecte scrupuleusement la modélisation NoSQL MongoDB :
 5. **`Reclamation.js`** :
    - Traçabilité complète du recours : étudiant, matière, type de note, note initiale, motif, statut (`EN_ATTENTE`, `ACCEPTEE`, `REFUSEE`), réponse pédagogique et note rectifiée.
 
-### Script de Seed Automatisé (`scripts/seed_mongo.js`) :
-- Conforme au **Livrable L5** du Cahier des Charges.
-- Commande d'exécution :
-  ```bash
-  node scripts/seed_mongo.js
-  ```
-- Peuple directement la base MongoDB locale ou distante (`mongodb://127.0.0.1:27017/scolarite_lmd`) avec tous les étudiants, matières, notes et utilisateurs de test.
+### Persistance MongoDB Directe :
+- Base de données : `mongodb://127.0.0.1:27017/scolarite_lmd`.
+- Toutes les données (utilisateurs, étudiants, matières, notes, réclamations) sont chargées et persistées directement dans les collections MongoDB.
 
 ---
 

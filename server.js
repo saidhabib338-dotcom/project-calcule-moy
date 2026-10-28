@@ -126,12 +126,20 @@ const server = http.createServer((req, res) => {
   serveStatic(req, res, pathname);
 });
 
-server.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🎓 PLATEFORME SCOLARITÉ LMD (Sujet 2)`);
-  console.log(`🚀 Serveur actif sur : http://localhost:${PORT}`);
-  console.log(`🌐 Application Web   : http://localhost:${PORT}/`);
-  console.log(`📚 Swagger OpenAPI  : http://localhost:${PORT}/api-docs`);
-  console.log(`📜 Contrat WSDL SOAP: http://localhost:${PORT}/soap?wsdl`);
-  console.log(`=======================================================`);
-});
+const { db } = require('./src/db/database');
+
+async function start() {
+  await db.readyPromise;
+  server.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(`🎓 PLATEFORME SCOLARITÉ LMD (Sujet 2)`);
+    console.log(`🚀 Serveur actif sur : http://localhost:${PORT}`);
+    console.log(`🍃 Base de Données   : MongoDB (${db.mongoConnected ? 'Connecté ✅' : 'Erreur ❌'})`);
+    console.log(`🌐 Application Web   : http://localhost:${PORT}/`);
+    console.log(`📚 Swagger OpenAPI  : http://localhost:${PORT}/api-docs`);
+    console.log(`📜 Contrat WSDL SOAP: http://localhost:${PORT}/soap?wsdl`);
+    console.log(`=======================================================`);
+  });
+}
+
+start();

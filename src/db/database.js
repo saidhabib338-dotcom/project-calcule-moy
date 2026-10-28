@@ -44,23 +44,6 @@ class Database {
       await mongoose.connect(MONGO_URI);
       this.mongoConnected = true;
       console.log(`🍃 [MongoDB] Connecté à 100% sur : ${MONGO_URI}`);
-
-      // Vérifier si MongoDB contient déjà les données, sinon peupler automatiquement
-      const countUsers = await Utilisateur.countDocuments();
-      if (countUsers === 0) {
-        console.log(`🌱 [MongoDB] Base vide détectée, initialisation automatique des collections...`);
-        const { buildSeedData } = require('../../scripts/seed_mongo');
-        const seedData = buildSeedData();
-        await Promise.all([
-          Utilisateur.insertMany(seedData.utilisateurs),
-          Etudiant.insertMany(seedData.etudiants),
-          Matiere.insertMany(seedData.matieres),
-          Note.insertMany(seedData.notes),
-          Reclamation.insertMany(seedData.reclamations)
-        ]);
-        console.log(`✅ [MongoDB] Collections initialisées avec succès.`);
-      }
-
       await this.reloadFromMongo();
     } catch (err) {
       console.error(`❌ [MongoDB Error] Impossible de connecter MongoDB : ${err.message}`);
@@ -146,12 +129,10 @@ class Database {
 
   async reset() {
     try {
-      const { seedMongo } = require('../../scripts/seed_mongo');
-      await seedMongo();
       await this.reloadFromMongo();
       return true;
     } catch (e) {
-      console.error('Erreur reset mongo :', e.message);
+      console.error('Erreur rechargement mongo :', e.message);
       return false;
     }
   }
