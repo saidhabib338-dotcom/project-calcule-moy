@@ -1,0 +1,358 @@
+                           CAHIER DES CHARGES 
+(Sujet 2 : Gestion d’étudiants et des notes)
+1. Introduction
+Les établissements d’enseignement supérieur gèrent un volume croissant de données (étudiants, matières, notes), et une gestion manuelle expose à des erreurs de saisie, à des doublons et à des moyennes peu fiables. Le projet « Gestion d’étudiants et des notes » consiste à concevoir un service web (API REST et SOAP) pour le service de scolarité, afin de centraliser ces informations et de calculer automatiquement les moyennes et résultats selon les normes académiques LMD.
+Il repose sur une architecture orientée services (SOA) modulaire comprenant des services dédiés : Étudiants (gestion des dossiers et archivage soft delete), Matières (intitulé, coefficient, crédits ECTS, enseignant), Notes et moyennes (saisie contrôlée, moyenne pondérée, mention et statut), et Réclamations (signalement et traitement des erreurs de notes par les étudiants). Une validation rigoureuse des données garantit la fiabilité et l'intégrité absolue des résultats.
+2. Objectifs du projet
+Objectif général :
+Concevoir et réaliser un service web (API REST et SOAP) fiable, documenté et testable qui centralise la gestion des étudiants, des matières et des notes, automatise le calcul des moyennes et des résultats pour le service de scolarité, et offre un espace de réclamation pour les étudiants.
+Objectifs spécifiques :
+Définir un contrat de service précis : décrire formellement les endpoints REST (OpenAPI / Swagger UI) et le contrat SOAP (WSDL).
+Gérer les dossiers des étudiants : permettre la consultation, l’ajout, la modification et la suppression logique .
+Gérer les matières : enregistrer l’intitulé, le code, le coefficient, les crédits ECTS et l’enseignant de chaque matière.
+Gérer les notes : permettre la saisie des notes (DS, examen, TP) et la consultation des notes d’un étudiant.
+Gérer les réclamations de notes (Nouveau) : permettre à l'étudiant d'envoyer un rapport pour vérifier une note erronée dans une matière spécifique, et permettre son traitement par l'enseignant ou l'agent.
+Valider les données entrantes : format de l’email, champs obligatoires, détection des doublons (1 DS, 1 Exam, 1 TP maximum par matière), existence de l’étudiant et de la matière avant enregistrement, note comprise entre 0 et 20.
+Exposer des calculs métier académiques : calcul de la moyenne par matière (70% Examen + 20% DS + 10% TP avec TP, ou 80% Examen + 20% DS sans TP), moyenne générale pondérée, mentions (Passable, Assez Bien, Bien, Très Bien) et statut LMD avec règle des 45/60 crédits et capitalisation des matières validées.
+Documenter et tester le service : produire la documentation interactive Swagger et la collection de tests automatisés Postman.
+3. Périmètre du projet
+Fonctionnalités incluses :
+Service
+Fonctionnalités incluses
+Étudiants
+Consulter la liste des étudiants, consulter un étudiant, ajouter, modifier et supprimer logiquement (soft delete) un étudiant
+Matières
+Consulter la liste des matières et ajouter une matière, avec intitulé, code, coefficient, crédits ECTS et enseignant
+Notes et moyennes
+Saisir une note (DS, examen, TP), consulter les notes d’un étudiant, calculer sa moyenne pondérée
+Réclamations
+Permettre à l'étudiant d'envoyer un rapport/réclamation pour vérifier une note erronée et suivre la réponse
+Règles de gestion
+Note comprise entre 0 et 20, formule pondérée (Exam 70%/80%, DS 20%, TP 10%), mention et statut LMD (45/60 crédits)
+Validation des données
+Champs obligatoires, détection des doublons d'évaluation (409 Conflict), vérification d'existence (404 Not Found)
+Fonctionnalités exclues :
+Application mobile native
+Le projet se limite à un service web (API REST + SOAP) et son interface web applicative
+Gestion des emplois du temps et absences
+Hors du périmètre scolarité défini (étudiants, matières, notes)
+Gestion des frais de scolarité et paiements
+Non prévue dans le sujet académique
+Envoi de notifications SMS
+Non demandé dans le cahier des charges initial
+4. Acteurs du système
+Identification des acteurs :
+Acteur
+Type
+Rôle dans le système
+Agent scolarité (Admin)
+Acteur principal
+Gère les étudiants (CRUD & soft delete), configure les matières, saisit les notes, supervise les réclamations et délibérations
+Enseignant
+Acteur secondaire
+Consulte ses cours et étudiants, saisit/modifie les notes de sa matière, et instruit les réclamations des étudiants
+Étudiant
+Acteur secondaire
+Consulte ses notes, sa moyenne, ses crédits et son statut, télécharge son bulletin PDF et soumet des réclamations de notes
+Détail du rôle de chaque acteur :
+1. Agent du service de scolarité (Administrateur)
+C'est l'utilisateur principal : il supervise l'ensemble du système, gère les dossiers étudiants et matières, déclenche les délibérations, exporte les données en CSV et pilote le traitement des réclamations.
+2. Enseignant
+Il intervient dans le processus de notation pour ses matières attribuées, vérifie les copies en cas de litige et valide ou refuse les réclamations des étudiants.
+3. Étudiant
+Il est le bénéficiaire direct du système. Il consulte ses résultats détaillés, ses crédits validés, sa mention et peut contester une note en fournissant un rapport argumenté.
+Matrice acteurs / fonctionnalités :
+Fonctionnalité
+Agent scolarité
+Enseignant
+Étudiant
+Authentification (Connexion / Profil)
+✔
+✔
+✔
+Gérer les étudiants (CRUD & Soft Delete)
+✔
+Gérer les matières (Ajout, Modification)
+✔
+Saisir / modifier une note
+✔
+✔
+Consulter les notes d’un étudiant
+✔
+✔
+✔ (Ses propres notes)
+Consulter moyenne, crédits, mention et statut
+✔
+✔
+✔
+Soumettre un rapport / réclamation de note
+✔
+Traiter une réclamation (corriger ou refuser)
+✔
+✔
+Consulter le classement et les statistiques
+✔
+✔
+Exporter les données en CSV
+✔
+Télécharger le bulletin officiel (PDF)
+✔
+✔
+Interrogation du service SOAP (WSDL)
+✔
+✔
+✔
+5. Besoins fonctionnels
+1. Gestion des étudiants (Service Étudiants)
+Réf.
+Besoin
+1
+Le système doit permettre d’afficher la liste de tous les étudiants actifs avec pagination et filtre par classe
+2
+Le système doit permettre de consulter le dossier complet d’un étudiant à partir de son identifiant
+3
+Le système doit permettre d’ajouter un étudiant (nom, prénom, classe, email unique)
+4
+Le système doit permettre de modifier les informations d’un étudiant
+5
+Le système doit permettre de supprimer logiquement un étudiant (Soft Delete : isActive = false)
+2. Gestion des matières (Service Matières)
+Réf.
+Besoin
+6
+Le système doit permettre d’afficher la liste exhaustive des matières
+7
+Le système doit permettre d’ajouter une matière avec son intitulé, son code, son coefficient (>=1), ses crédits ECTS et son enseignant
+3. Gestion des notes (Service Notes)
+Réf.
+Besoin
+8
+Le système doit permettre de saisir une note (valeur, type : DS, examen ou TP) pour un étudiant dans une matière
+9
+Le système doit permettre de consulter toutes les notes détaillées d’un étudiant
+4. Calcul des moyennes et délibération académique (Règles LMD)
+Réf.
+Besoin
+10a
+Calculer la moyenne de matière avec TP : Moyenne = (Examen × 70%) + (DS × 20%) + (TP × 10%)
+10b
+Calculer la moyenne de matière sans TP : Moyenne = (Examen × 80%) + (DS × 20%)
+10c
+Calculer la moyenne générale pondérée par les coefficients des matières
+11
+Déterminer la mention selon la moyenne : Passable [10-12[, Assez Bien [12-14[, Bien [14-16[, Très Bien (>=16)
+12
+Déterminer le statut LMD : Admis (GPA>=10) ; Admis par Rachat si 9<=GPA<10 et crédits>=45/60 ; sinon Ajourné avec capitalisation des matières >= 10
+5. Gestion des réclamations de notes (Nouveau Service)
+Réf.
+Besoin
+12a
+Le système doit permettre à l'étudiant de soumettre un rapport/réclamation pour vérifier une note erronée dans une matière spécifique, avec motif détaillé
+12b
+Le système doit permettre à l'enseignant ou à la scolarité de consulter et instruire les réclamations (rectifier la note ou rejeter avec justification)
+12c
+Le système doit permettre à l'étudiant de suivre l'état de sa réclamation en temps réel (en attente, acceptée, refusée)
+6. Validation des données et intégrité
+Réf.
+Besoin
+13
+Le système doit refuser toute note hors de l’intervalle 0 à 20, avec un message clair (code 400 Bad Request)
+14
+Le système doit vérifier la validité syntaxique de l’email d’un étudiant
+15
+Le système doit vérifier la présence obligatoire de tous les champs essentiels avant persistance
+16
+Le système doit détecter et refuser les doublons : email unique, et unicité composée (1 seul DS, 1 seul Exam, 1 seul TP par matière par étudiant -> 409 Conflict)
+17
+Le système doit vérifier programmatiquement l’existence et l'état actif de l’étudiant et de la matière avant d’enregistrer une note (404 Not Found)
+7. Gestion des erreurs et codes HTTP
+Réf.
+Besoin
+18
+Le système doit retourner des réponses d’erreur en JSON normalisées avec codes HTTP standard (200, 201, 204, 400, 401, 403, 404, 409, 500)
+8. Besoins optionnels d'excellence
+Réf.
+Besoin
+19
+Afficher le classement officiel de la classe ordonné par moyenne générale décroissante
+20
+Calculer les indicateurs statistiques par matière (moyenne de classe, note maximale, note minimale)
+21
+Exporter l'ensemble des données d'étudiants et de délibération au format CSV
+22
+Générer et télécharger le bulletin officiel de notes au format PDF avec en-tête académique et détail des crédits
+6. Besoins non fonctionnels
+1. Performance
+Réf.
+Besoin
+BNF1
+Le service doit répondre aux requêtes simples (consultation, ajout) en moins de 1 seconde en usage normal
+BNF2
+Le calcul de la délibération et de la moyenne pondérée d’un étudiant doit être effectué en moins de 2 secondes
+BNF3
+Le service doit supporter plusieurs requêtes simultanées sans dégradation de performance
+2. Sécurité
+Réf.
+Besoin
+BNF4
+Toutes les données entrantes doivent être validées côté serveur avant tout traitement ou enregistrement
+BNF5
+Protection contre les injections NoSQL et assainissement des entrées utilisateurs
+BNF6
+Authentification sécurisée par JSON Web Tokens (JWT) et hachage des mots de passe avec bcrypt
+BNF7
+Les messages d’erreur ne doivent pas révéler d’informations techniques internes (pas de trace de pile en production)
+BNF8
+L’intégrité référentielle des données doit être garantie programmatiquement sans enregistrements orphelins
+3. Ergonomie et facilité d’utilisation
+Réf.
+Besoin
+BNF9
+Les endpoints doivent suivre des conventions REST claires et cohérentes (/api/v1/...)
+BNF10
+Les messages d’erreur doivent être explicites et compréhensibles avec le code HTTP adapté
+BNF11
+Les réponses doivent présenter une structure JSON homogène et lisible ({ success, data, error })
+BNF12
+L'interface web React doit être intuitive, moderne et responsive pour tous les profils
+4. Compatibilité et interopérabilité
+Réf.
+Besoin
+BNF13
+Le service REST doit échanger les données au format standard JSON
+BNF14
+Le service SOAP doit échanger les données en XML avec validation par contrat WSDL
+BNF15
+Le système doit être utilisable par tout client HTTP (Postman, navigateur, application tierce) sur Windows, Linux et macOS
+5. Fiabilité et disponibilité
+Réf.
+Besoin
+BNF16
+Le service doit rester parfaitement stable face aux requêtes erronées (rejet propre sans crash serveur)
+BNF17
+Les données enregistrées doivent être conservées de façon persistante dans la base de données MongoDB
+6. Maintenabilité et documentation
+Réf.
+Besoin
+BNF18
+Le contrat de service REST doit être documenté interactivement avec OpenAPI / Swagger UI
+BNF19
+Le code backend doit être rigoureusement structuré en couches modulaires (Controllers, Services, Models, Middlewares)
+BNF20
+Le service doit être testable, accompagné d’une suite complète de tests Postman couvrant cas normaux et erreurs
+7. Contraintes techniques et Choix d'Architecture
+1. Contraintes imposées par le sujet :
+Réf.
+Contrainte imposée
+CT1
+Architecture orientée services (SOA), avec services dédiés : Étudiants, Matières, Notes, Réclamations
+CT2
+Exposition des fonctionnalités sous forme d’endpoints REST (/etudiants, /matieres, /notes, /reclamations) avec verbes HTTP
+CT3
+Contrat de service précis : endpoints, formats d’entrée/sortie JSON, codes de retour normalisés
+CT4
+Validation obligatoire des données entrantes (email, champs obligatoires, doublons, existence de l'étudiant et de la matière)
+CT5
+Note comprise entre 0 et 20, sinon refus systématique avec code 400 Bad Request
+CT6
+Calcul de la moyenne pondérée par les coefficients, avec mention et statut académique
+CT7
+Modèle de données complet respecté : Utilisateur, Étudiant, Matière, Note, Réclamation
+2. Choix techniques et Frameworks retenus pour le projet :
+Composant
+Technologie validée
+Justification & Rôle
+Environnement Backend
+Node.js 
+Moteur d'exécution JavaScript serveur asynchrone, rapide et non-bloquant
+Framework Backend
+Express.js
+Standard industriel pour la conception d'API REST modulaires, middlewares et contrôleurs
+Base de données
+MongoDB (Local)
+Base de données NoSQL orientée documents JSON, nativement adaptée aux structures de données de l'API
+ODM (Data Modeling)
+Mongoose
+Gestion des schémas stricts, validation des contraintes (0-20), index uniques et soft delete
+Protocole d'échange REST
+JSON
+Format léger, universel et standard pour la communication avec les clients modernes
+Protocole Web Service SOAP
+Node SOAP (WSDL)
+Service web formel XML avec contrat WSDL pour le calcul et l'audit de délibération
+Documentation API
+Swagger UI / OpenAPI 3.0
+Interface interactive intégrée pour visualiser et tester l'ensemble des endpoints
+Tests automatisés
+Postman Collection
+Suite de tests couvrant les cas nominaux, tests de limites et erreurs (400, 404, 409)
+Interface utilisateur (UI)
+React.js
+Application web moderne monopage (SPA) avec tableaux de bord réactifs pour chaque acteur
+8. Planification du projet et méthodologie Scrum
+Rôles Scrum :
+Rôle
+Responsabilité
+Dans ce projet
+Product Owner
+Définit les besoins et valide les fonctionnalités livrées
+L'enseignant / Encadrant universitaire
+Scrum Master
+Garantit le respect de la méthode agile et lève les blocages
+L'étudiant / Responsable technique
+Équipe de développement
+Conçoit, développe, teste et documente l'application
+L'étudiant(e) / Équipe projet
+Phases du projet et Sprints :
+Phase / Sprint
+Contenu et Objectifs
+Durée estimée
+Phase 0 : Initialisation
+Analyse du sujet, spécifications détaillées, conception UML, choix des technologies et contrat de service
+2 semaines
+Sprint 1 : Socle & Étudiants
+Initialisation Node/Express, connexion MongoDB, authentification JWT et Service Étudiants (CRUD + Soft Delete)
+1 semaine
+Sprint 2 : Matières & Notes
+Service Matières (coefficients, crédits ECTS) et Service Notes (saisie 0-20, unicité composée, vérification d'existence)
+1 semaine
+Sprint 3 : Délibérations & SOAP
+Moteur de calcul LMD (70/20/10, GPA, 45/60 crédits, mentions, statut) et exposition du service web SOAP (WSDL)
+1 semaine
+Sprint 4 : Réclamations & Extensions
+Service Réclamations (dépôt étudiant et traitement enseignant), classement, statistiques, export CSV et bulletin PDF
+1 semaine
+Sprint 5 : Frontend & Tests
+Développement de l'interface web React.js, validation complète des tests Postman et finalisation Swagger
+1 semaine
+Phase finale : Soutenance
+Rédaction du rapport académique de synthèse et préparation du diaporama de soutenance
+1 semaine
+TOTAL
+Cycle de vie complet du projet d'ingénierie logicielle
+8 semaines
+9. Livrables officiels du projet
+N°
+Livrable
+Description détaillée
+Format
+L1
+Cahier des charges
+Document contractuel complet, périmètre, acteurs, besoins fonctionnels/non-fonctionnels et planning
+Word (.docx) / PDF
+L2
+Dossier de conception
+Diagrammes de cas d'utilisation, classes, séquences, modèle de données MongoDB et architecture logicielle
+Word / PDF
+L3
+Contrat de service
+Documentation exhaustive OpenAPI 3.0 (Swagger UI) et contrat WSDL du service SOAP
+Swagger / WSDL
+L4
+Code source complet
+Backend Node/Express (REST + SOAP) et Frontend React, commenté, testable et versionné sur Git
+Dépôt GitHub / ZIP
+L5
+Base de données
+Schémas Mongoose, index d'intégrité et jeu d'essai complet pour la démonstration
+MongoDB / Seed script

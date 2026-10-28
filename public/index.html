@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portail Numérique Universitaire - Espace Étudiant & Scolarité</title>
+  <meta name="description" content="Espace numérique de travail universitaire pour la consultation des résultats, la gestion des notes et les réclamations.">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+</head>
+<body>
+
+  <!-- ============================================================
+       1. ÉCRAN DE CONNEXION ÉTUDIANT & PERSONNEL (ENT)
+       ============================================================ -->
+  <div id="auth-view">
+    <div class="auth-card">
+      
+      <!-- Présentation Institutionnelle -->
+      <div class="auth-side-info">
+        <div>
+          <div class="auth-univ-header">
+            <div class="auth-univ-emblem">🎓</div>
+            <div class="auth-univ-titles">
+              <h2>UNIVERSITÉ CENTRALE</h2>
+              <p>Espace Numérique de Travail (ENT)</p>
+            </div>
+          </div>
+
+          <div class="auth-portal-desc">
+            <h3>Bienvenue sur votre portail académique</h3>
+            <p>Accédez à l'ensemble de vos services universitaires en ligne : consultation des notes, relevés officiels et démarches pédagogiques.</p>
+
+            <div class="auth-portal-bullets">
+              <div class="auth-bullet">
+                <span class="auth-bullet-icon">✓</span>
+                <span>Consultation en temps réel des notes d'évaluations</span>
+              </div>
+              <div class="auth-bullet">
+                <span class="auth-bullet-icon">✓</span>
+                <span>Téléchargement des relevés de délibération LMD</span>
+              </div>
+              <div class="auth-bullet">
+                <span class="auth-bullet-icon">✓</span>
+                <span>Dépôt et suivi des réclamations de copies</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-footer-note">
+          Système Universitaire • Année Académique 2026/2027
+        </div>
+      </div>
+
+      <!-- Formulaire de Connexion -->
+      <div class="auth-form-side">
+        <h2 class="auth-form-title">Connexion à votre compte</h2>
+        <p class="auth-form-subtitle">Entrez vos identifiants universitaires pour accéder à votre espace.</p>
+
+        <!-- Alerte erreur -->
+        <div id="auth-error-box" class="auth-error" style="display: none;">
+          <span>⚠️</span>
+          <span id="auth-error-text">Identifiants incorrects</span>
+        </div>
+
+        <form id="form-login">
+          <div class="form-field">
+            <label class="form-label" for="login-email">Adresse Email Institutionnelle :</label>
+            <input type="email" id="login-email" class="form-control" placeholder="prenom.nom@etud.univ.tn" required autocomplete="username">
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="login-password">Mot de passe :</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%; padding: 0.65rem;">
+              Se Connecter
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       2. ESPACE CONNECTÉ (TABLEAU DE BORD)
+       ============================================================ -->
+  <div id="app-view" style="display: none; min-height: 100vh; flex-direction: column;">
+
+    <!-- BARRE SUPÉRIEURE -->
+    <header class="navbar">
+      <a href="#" class="nav-brand" onclick="return false;">
+        <div class="brand-emblem">🎓</div>
+        <div class="brand-text">
+          <h1>UNIVERSITÉ CENTRALE</h1>
+          <p id="portal-sub-title">Portail des Études & Délibérations</p>
+        </div>
+      </a>
+
+      <div class="nav-user-box">
+        <div class="user-profile-badge">
+          <div id="user-avatar" class="user-avatar-circle">U</div>
+          <span id="user-display-name" class="user-name">Utilisateur</span>
+          <span id="user-role-badge" class="role-pill admin">ADMIN</span>
+        </div>
+
+        <button class="btn btn-secondary btn-sm" onclick="deconnecterUtilisateur()" title="Se Déconnecter">
+          Déconnexion
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENU -->
+    <main class="container">
+
+      <!-- Indicateurs Généraux (affichés pour la scolarité et enseignants) -->
+      <section id="kpi-section" class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Étudiants Inscrits</div>
+          <div id="stat-total-etudiants" class="kpi-value">--</div>
+          <div class="kpi-desc">Effectif total actif</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Taux de Réussite</div>
+          <div id="stat-taux-reussite" class="kpi-value">--%</div>
+          <div class="kpi-desc">Admis directs et par rachat</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Moyenne de Promotion</div>
+          <div id="stat-moyenne-promo" class="kpi-value">--/20</div>
+          <div class="kpi-desc">Moyenne générale pondérée</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-title">Réclamations en Cours</div>
+          <div id="stat-reclamations-attente" class="kpi-value">--</div>
+          <div class="kpi-desc">Dossiers en attente de réponse</div>
+        </div>
+      </section>
+
+      <!-- Navigation par Onglets (Adaptée selon l'acteur) -->
+      <nav class="tabs-nav">
+        <!-- Onglets Étudiant -->
+        <button class="tab-btn role-tab-etudiant active" data-tab="bulletin-etudiant">
+          📊 Mes Résultats & Relevé de Notes
+        </button>
+        <button class="tab-btn role-tab-etudiant" data-tab="reclamations">
+          ✍️ Mes Réclamations
+        </button>
+
+        <!-- Onglets Administration (Scolarité) & Enseignant -->
+        <button class="tab-btn role-tab-admin active" data-tab="etudiants">
+          👥 Liste des Étudiants
+        </button>
+        <button class="tab-btn role-tab-admin" data-tab="matieres">
+          📚 Matières du Semestre
+        </button>
+        <button class="tab-btn role-tab-admin role-tab-enseignant" data-tab="notes">
+          📝 Saisie des Notes
+        </button>
+        <button class="tab-btn role-tab-admin role-tab-enseignant" data-tab="deliberations">
+          🏆 Procès-Verbal & Classement
+        </button>
+        <button class="tab-btn role-tab-admin role-tab-enseignant" data-tab="reclamations">
+          📬 Traitement des Réclamations <span id="tab-badge-recs" class="tab-badge">0</span>
+        </button>
+        <button class="tab-btn role-tab-admin" data-tab="services-tech">
+          ⚙️ Services Web & Audit
+        </button>
+      </nav>
+
+      <!-- ============================================================
+           ONGLET 1 : MON BULLETIN (VUE ÉTUDIANT BEL7A9)
+           ============================================================ -->
+      <section id="tab-panel-bulletin-etudiant" class="tab-content-panel panel" style="display:none;">
+        <div id="bulletin-etudiant-container">
+          <!-- Chargé dynamiquement pour l'étudiant -->
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 2 : RÉCLAMATIONS (ÉTUDIANT & SCOLARITÉ)
+           ============================================================ -->
+      <section id="tab-panel-reclamations" class="tab-content-panel panel" style="display:none;">
+        <div id="reclamations-container">
+          <!-- Chargé dynamiquement -->
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 3 : LISTE DES ÉTUDIANTS (SCOLARITÉ)
+           ============================================================ -->
+      <section id="tab-panel-etudiants" class="tab-content-panel panel">
+        <div class="panel-header">
+          <div>
+            <h2>Gestion des Étudiants</h2>
+            <p>Dossiers académiques, inscriptions et archivage</p>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <input type="text" id="global-search" class="search-box" placeholder="Rechercher par nom, prénom...">
+
+            <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm filter-class-btn active" data-class="">Toutes</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-INFO">L3-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-GL">M1-GL</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-TIC">L2-TIC</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-INFO">L2-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-DSI">L3-DSI</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-IA">M1-IA</button>
+            </div>
+
+            <button class="btn btn-primary btn-sm role-tab-admin" onclick="ouvrirAjouterEtudiantModal()">
+              + Inscrire un Étudiant
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>N° Étudiant</th>
+                <th>Nom & Prénom</th>
+                <th>Classe</th>
+                <th>Email Universitaire</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="etudiants-table-body">
+              <!-- Dynamique -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 4 : MATIÈRES (AVEC FILTRAGE PAR NIVEAU & SECTION)
+           ============================================================ -->
+      <section id="tab-panel-matieres" class="tab-content-panel panel" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <h2>Matières & Unités d'Enseignement</h2>
+            <p>Coefficients, crédits et enseignants responsables selon le plan d'études LMD</p>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm role-tab-admin" onclick="ouvrirAjouterMatiereModal()">
+              + Ajouter une Matière
+            </button>
+          </div>
+        </div>
+
+        <!-- BARRE DE FILTRAGE PAR NIVEAU & SECTION -->
+        <div class="filter-bar" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Filtres Matières :</span>
+
+          <!-- Filtre Niveau -->
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <label for="matieres-filter-niveau" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Niveau :</label>
+            <select id="matieres-filter-niveau" class="filter-select" onchange="filtrerMatieres()">
+              <option value="">Tous les niveaux</option>
+              <option value="L2">Licence 2 (L2)</option>
+              <option value="L3">Licence 3 (L3)</option>
+              <option value="M1">Master 1 (M1)</option>
+            </select>
+          </div>
+
+          <!-- Filtre Section / Filière -->
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <label for="matieres-filter-section" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Section :</label>
+            <select id="matieres-filter-section" class="filter-select" onchange="filtrerMatieres()">
+              <option value="">Toutes les sections</option>
+              <option value="INFO">Informatique (INFO)</option>
+              <option value="GL">Génie Logiciel (GL)</option>
+              <option value="TIC">Technologies TIC (TIC)</option>
+              <option value="DSI">Développement SI (DSI)</option>
+              <option value="IA">Intelligence Artificielle (IA)</option>
+            </select>
+          </div>
+
+          <!-- Recherche textuelle -->
+          <div style="flex: 1; min-width: 180px;">
+            <input type="text" id="matieres-search" class="search-box" style="width: 100%;" placeholder="Rechercher matière ou code..." oninput="filtrerMatieres()">
+          </div>
+
+          <!-- Bouton Réinitialiser -->
+          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresMatieres()" title="Réinitialiser tous les filtres">
+            ↺ Réinitialiser
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Intitulé du Cours</th>
+                <th>Promotion (Niveau & Section)</th>
+                <th>Coefficient</th>
+                <th>Crédits ECTS</th>
+                <th>Régime (TP)</th>
+                <th>Enseignant</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="matieres-table-body">
+              <!-- Dynamique -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 5 : SAISIE & CONTRÔLE DES NOTES (AVEC FILTRES ET GRILLE ÉTUDIANT)
+           ============================================================ -->
+      <section id="tab-panel-notes" class="tab-content-panel panel" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <h2>Saisie & Contrôle des Notes</h2>
+            <p>Feuille de saisie par étudiant selon le plan d'études LMD et journal des évaluations</p>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <!-- Bascule des 3 modes de saisie -->
+            <button id="btn-mode-classe-matiere" class="btn btn-primary btn-sm" onclick="basculerModeNotes('classe-matiere')">
+              🏫 Saisie par Classe & Matière
+            </button>
+            <button id="btn-mode-grille" class="btn btn-secondary btn-sm" onclick="basculerModeNotes('grille')">
+              👤 Saisie par Étudiant (Dossier LMD)
+            </button>
+            <button id="btn-mode-journal" class="btn btn-secondary btn-sm" onclick="basculerModeNotes('journal')">
+              🔍 Journal des Évaluations
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="ouvrirSaisieNoteModal()">
+              + Saisie Simple
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================================
+             VUE A : WORKFLOW HIÉRARCHIQUE (CLASSE -> MATIÈRE -> ÉTUDIANTS)
+             ============================================================ -->
+        <div id="notes-view-classe-matiere" style="margin-top:0.75rem;">
+          <!-- Étape 1 : Choisir la Classe -->
+          <div class="workflow-step-box" style="margin-bottom:1rem;">
+            <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; margin-bottom:0.6rem; letter-spacing:0.05em;">
+              1. Sélectionner la Promotion / Classe :
+            </div>
+            <div id="workflow-classe-pills" style="display:flex; gap:0.65rem; flex-wrap:wrap;">
+              <!-- Rempli dynamiquement (L3-INFO, M1-GL...) -->
+            </div>
+          </div>
+
+          <!-- Étape 2 : Choisir la Matière (Filtrée selon Enseignant / Admin) -->
+          <div class="workflow-step-box" style="margin-bottom:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
+              <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em;">
+                2. Sélectionner la Matière à Évaluer :
+              </div>
+              <div id="workflow-teacher-note" style="font-size:0.78rem; color:var(--text-muted);">
+                <!-- Information sur l'assignation -->
+              </div>
+            </div>
+            <div id="workflow-matieres-cards" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:0.75rem;">
+              <!-- Rempli dynamiquement -->
+            </div>
+          </div>
+
+          <!-- Étape 3 : Liste des Étudiants et Saisie des Notes -->
+          <div id="workflow-students-roster-container">
+            <!-- Rendu dynamique du tableau de la classe pour cette matière -->
+          </div>
+        </div>
+
+        <!-- BARRE DE FILTRAGE MULTI-CRITÈRES (Pour vue Journal et Grille) -->
+        <div id="notes-filter-bar-container" class="filter-bar" style="display:none;">
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Filtres :</span>
+
+          <!-- Filtre Classe -->
+          <select id="notes-filter-classe" class="filter-select" onchange="appliquerFiltresNotes()">
+            <option value="">Toutes les promotions</option>
+            <option value="L3-INFO">L3 Informatique</option>
+            <option value="M1-GL">M1 Génie Logiciel</option>
+            <option value="L2-TIC">L2 TIC</option>
+          </select>
+
+          <!-- Filtre Matière -->
+          <select id="notes-filter-matiere" class="filter-select" onchange="appliquerFiltresNotes()">
+            <option value="">Toutes les matières</option>
+            <!-- Rempli dynamiquement -->
+          </select>
+
+          <!-- Filtre Type d'Épreuve -->
+          <select id="notes-filter-type" class="filter-select" onchange="appliquerFiltresNotes()">
+            <option value="">Toutes les épreuves</option>
+            <option value="EXAMEN">Examen Final</option>
+            <option value="DS">Devoir Surveillé (DS)</option>
+            <option value="TP">Travaux Pratiques (TP)</option>
+          </select>
+
+          <!-- Recherche Étudiant -->
+          <input type="text" id="notes-filter-search" class="search-box" style="flex:1; min-width:180px;" placeholder="Filtrer par nom d'étudiant..." oninput="appliquerFiltresNotes()">
+
+          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresNotes()" title="Réinitialiser les filtres">
+            ✕ Réinitialiser
+          </button>
+        </div>
+
+        <!-- ============================================================
+             VUE B : FEUILLE DE SAISIE INTERACTIVE PAR ÉTUDIANT (PLAN D'ÉTUDES)
+             ============================================================ -->
+        <div id="notes-view-grille" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; background:rgba(255,255,255,0.02); padding:0.85rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border-card);">
+            <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap; flex:1;">
+              <!-- Recherche rapide par ID / N° Inscription -->
+              <input type="text" 
+                     id="grille-quick-student-id" 
+                     class="search-box" 
+                     style="width:230px;" 
+                     placeholder="🔍 Saisir N° Étudiant (ex: ETU-2026-001)..." 
+                     oninput="rechercherEtudiantParId(this.value)">
+
+              <span style="font-size:0.85rem; font-weight:700; color:white;">ou sélectionner :</span>
+              <select id="notes-grille-student-select" class="filter-select" style="min-width:240px; font-weight:600;" onchange="chargerGrilleNotesEtudiant(this.value)">
+                <!-- Rempli dynamiquement -->
+              </select>
+            </div>
+
+            <div style="display:flex; gap:0.5rem;">
+              <button class="btn btn-secondary btn-sm" onclick="naviguerEtudiantGrille(-1)" title="Étudiant précédent">
+                ◀ Précédent
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="naviguerEtudiantGrille(1)" title="Étudiant suivant">
+                Suivant ▶
+              </button>
+            </div>
+          </div>
+
+          <!-- Conteneur dynamique de la feuille de notes LMD -->
+          <div id="student-grid-sheet-container">
+            <!-- Rendu interactif via app.js -->
+          </div>
+        </div>
+
+        <!-- ============================================================
+             VUE C : JOURNAL COMPLET DES ÉVALUATIONS INDIVIDUELLES
+             ============================================================ -->
+        <div id="notes-view-journal" style="display:none;">
+          <div class="table-responsive">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>Étudiant</th>
+                  <th>Classe</th>
+                  <th>Matière</th>
+                  <th>Épreuve</th>
+                  <th>Note (/20)</th>
+                  <th>Date d'Enregistrement</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="notes-table-body">
+                <!-- Dynamique -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 6 : DÉLIBÉRATIONS & CLASSEMENT
+           ============================================================ -->
+      <section id="tab-panel-deliberations" class="tab-content-panel panel" style="display:none;">
+        <div id="deliberations-container">
+          <!-- Dynamique -->
+        </div>
+      </section>
+
+      <!-- ============================================================
+           ONGLET 7 : OUTILS TECHNIQUES & AUDIT (DISCRET POUR SCOLARITÉ)
+           ============================================================ -->
+      <section id="tab-panel-services-tech" class="tab-content-panel panel" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <h2>Outils d'Audit & Services Web (SOA)</h2>
+            <p>Interrogation du Service Web SOAP et Documentation OpenAPI</p>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="reinitialiserBaseMongo()" title="Peupler MongoDB avec le jeu complet">🌱 Peupler MongoDB (Seed)</button>
+            <a href="/api-docs" target="_blank" class="btn btn-secondary btn-sm">📖 Swagger OpenAPI</a>
+            <a href="/soap?wsdl" target="_blank" class="btn btn-secondary btn-sm">📜 Contrat WSDL</a>
+            <a href="/api/v1/export/postman" download="Scolarite_LMD_Postman_Collection.json" class="btn btn-secondary btn-sm">📥 Collection Postman</a>
+          </div>
+        </div>
+
+        <!-- Statut MongoDB -->
+        <div id="mongo-status-card" style="margin-top:1rem; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div style="display:flex; align-items:center; gap:0.85rem;">
+            <div style="font-size:1.6rem;">🍃</div>
+            <div>
+              <div style="font-weight:700; color:#34d399; font-size:0.92rem;">Serveur MongoDB Local Actif</div>
+              <div id="mongo-status-text" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;">
+                Base : <strong style="color:white;">scolarite_lmd</strong> sur <strong style="color:white;">mongodb://127.0.0.1:27017/scolarite_lmd</strong>
+              </div>
+            </div>
+          </div>
+          <div id="mongo-counts-badges" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <span class="badge badge-admis">18 Comptes</span>
+            <span class="badge badge-gray">13 Étudiants</span>
+            <span class="badge badge-gray">11 Matières</span>
+            <span class="badge badge-gray">125 Notes</span>
+            <span class="badge badge-gray">5 Réclamations</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-top:1rem;">
+          <div style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
+            <h4 style="color:white; margin-bottom:1rem; font-size:0.9rem;">Testeur de Requête SOAP</h4>
+            
+            <div class="form-field">
+              <label class="form-label">Opération :</label>
+              <select id="soap-operation-select" class="form-control">
+                <option value="CalculerMoyenneEtudiant">CalculerMoyenneEtudiant</option>
+                <option value="VerifierStatutEtudiant">VerifierStatutEtudiant</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Étudiant :</label>
+              <select id="soap-student-select" class="form-control"></select>
+            </div>
+
+            <div style="margin-top:1rem;">
+              <button class="btn btn-primary" onclick="executerRequeteSoap()" style="width:100%;">
+                Envoyer la Requête SOAP
+              </button>
+            </div>
+
+            <div style="margin-top:1rem;">
+              <div id="soap-request-xml" style="font-family:var(--font-mono); font-size:0.75rem; color:#38bdf8; background:#040711; padding:0.75rem; border-radius:4px; max-height:160px; overflow-y:auto; white-space:pre-wrap;"></div>
+            </div>
+          </div>
+
+          <div style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
+            <h4 style="color:white; margin-bottom:1rem; font-size:0.9rem;">Réponse XML du Serveur SOAP :</h4>
+            <div id="soap-response-xml" style="font-family:var(--font-mono); font-size:0.75rem; color:#34d399; background:#040711; padding:0.75rem; border-radius:4px; height:320px; overflow-y:auto; white-space:pre-wrap;">
+&lt;!-- La réponse XML apparaîtra ici après l'envoi --&gt;
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       MODALS DE SAISIE
+       ============================================================ -->
+  <!-- Modal Inscription Étudiant -->
+  <div id="modal-etudiant" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-etudiant-title">Inscrire un Étudiant</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-etudiant')">&times;</button>
+      </div>
+      <form id="form-etudiant">
+        <input type="hidden" id="form-etudiant-id">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Nom :</label>
+              <input type="text" id="form-etudiant-nom" class="form-control" required placeholder="Ex: Mansouri">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Prénom :</label>
+              <input type="text" id="form-etudiant-prenom" class="form-control" required placeholder="Ex: Sarah">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Classe :</label>
+              <select id="form-etudiant-classe" class="form-control" required>
+                <option value="L3-INFO">L3 Informatique (L3-INFO)</option>
+                <option value="M1-GL">M1 Génie Logiciel (M1-GL)</option>
+                <option value="L2-TIC">L2 TIC (L2-TIC)</option>
+                <option value="L2-INFO">L2 Informatique (L2-INFO)</option>
+                <option value="L3-DSI">L3 DSI (L3-DSI)</option>
+                <option value="M1-IA">M1 Intelligence Artificielle (M1-IA)</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Email Universitaire :</label>
+              <input type="email" id="form-etudiant-email" class="form-control" required placeholder="prenom.nom@etud.univ.tn">
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-etudiant')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Matière -->
+  <div id="modal-matiere" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-matiere-title">Ajouter une Matière</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-matiere')">&times;</button>
+      </div>
+      <form id="form-matiere">
+        <input type="hidden" id="form-mat-id">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Code :</label>
+              <input type="text" id="form-mat-code" class="form-control" required placeholder="Ex: ALGO301" style="text-transform:uppercase;">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Intitulé :</label>
+              <input type="text" id="form-mat-intitule" class="form-control" required placeholder="Ex: Algorithmique Avancée">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Coefficient :</label>
+              <input type="number" id="form-mat-coef" class="form-control" min="1" max="10" required value="3">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Crédits ECTS :</label>
+              <input type="number" id="form-mat-credits" class="form-control" min="1" max="30" required value="6">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Enseignant Responsable :</label>
+              <input type="text" id="form-mat-enseignant" class="form-control" placeholder="Dr. Philippe Martin">
+            </div>
+            <div class="form-field">
+              <label class="form-label">Promotion / Classe :</label>
+              <select id="form-mat-classe" class="form-control" required>
+                <option value="L3-INFO">L3 Informatique (L3-INFO)</option>
+                <option value="M1-GL">M1 Génie Logiciel (M1-GL)</option>
+                <option value="L2-TIC">L2 TIC (L2-TIC)</option>
+                <option value="L2-INFO">L2 Informatique (L2-INFO)</option>
+                <option value="L3-DSI">L3 DSI (L3-DSI)</option>
+                <option value="M1-IA">M1 Intelligence Artificielle (M1-IA)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; cursor:pointer;">
+              <input type="checkbox" id="form-mat-hastp" style="accent-color:var(--primary);">
+              <span>Comporte des Travaux Pratiques (TP)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-matiere')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Note -->
+  <div id="modal-note" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Saisie d'une Note</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-note')">&times;</button>
+      </div>
+      <form id="form-note">
+        <div class="modal-body">
+          <div class="form-field">
+            <label class="form-label">Étudiant :</label>
+            <select id="form-note-etudiant" class="form-control" required></select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Matière :</label>
+            <select id="form-note-matiere" class="form-control" required></select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Épreuve :</label>
+              <select id="form-note-type" class="form-control" required>
+                <option value="EXAMEN">Examen Final</option>
+                <option value="DS">Devoir Surveillé (DS)</option>
+                <option value="TP">Travaux Pratiques (TP)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Note sur 20 :</label>
+              <input type="number" id="form-note-valeur" class="form-control" min="0" max="20" step="0.25" required placeholder="Ex: 14.5">
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-note')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Valider la Note</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Réclamation Étudiant -->
+  <div id="modal-depot-reclamation" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Signaler une Erreur sur une Note</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-depot-reclamation')">&times;</button>
+      </div>
+      <form id="form-depot-rec">
+        <div class="modal-body">
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Matière :</label>
+              <select id="form-rec-matiere" class="form-control" required></select>
+            </div>
+            <div class="form-field">
+              <label class="form-label">Épreuve :</label>
+              <select id="form-rec-type" class="form-control" required>
+                <option value="EXAMEN">Examen</option>
+                <option value="DS">Devoir Surveillé</option>
+                <option value="TP">TP</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Explication détaillée de l'erreur constatée :</label>
+            <textarea id="form-rec-motif" class="form-control" rows="4" required placeholder="Expliquez clairement le problème constaté sur votre copie..."></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-depot-reclamation')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Envoyer la Demande</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Traitement Réclamation -->
+  <div id="modal-traiter-reclamation" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Traitement de la Réclamation</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-traiter-reclamation')">&times;</button>
+      </div>
+      <form id="form-traiter-rec">
+        <input type="hidden" id="form-traiter-rec-id">
+        <div class="modal-body">
+          <div style="background:rgba(255,255,255,0.03); padding:0.85rem; border-radius:6px; margin-bottom:1rem; font-size:0.82rem;">
+            <div><strong>Étudiant :</strong> <span id="traiter-rec-etudiant"></span></div>
+            <div><strong>Matière :</strong> <span id="traiter-rec-matiere"></span></div>
+            <div><strong>Note actuelle :</strong> <span id="traiter-rec-note-actuelle"></span></div>
+            <div style="margin-top:0.4rem; color:var(--text-muted);">
+              <strong>Motif :</strong> <span id="traiter-rec-motif"></span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Décision :</label>
+              <select id="form-traiter-rec-statut" class="form-control" required>
+                <option value="ACCEPTEE">Accepter (Rectifier la note)</option>
+                <option value="REFUSEE">Refuser (Maintenir la note)</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Nouvelle Note (/20) :</label>
+              <input type="number" id="form-traiter-rec-rectification" class="form-control" min="0" max="20" step="0.25" placeholder="Ex: 14.0">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Commentaire pour l'étudiant :</label>
+            <textarea id="form-traiter-rec-reponse" class="form-control" rows="3" placeholder="Justifiez votre décision..."></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-traiter-reclamation')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer la Décision</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Indicateurs Statistiques par Matière (Besoin 20) -->
+  <div id="modal-stats-matiere" class="modal-overlay">
+    <div class="modal-card" style="max-width:580px;">
+      <div class="modal-head">
+        <h3 id="modal-stats-matiere-title">Indicateurs Statistiques du Cours</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-stats-matiere')">&times;</button>
+      </div>
+      <div id="modal-stats-matiere-body" class="modal-body" style="padding:1.5rem;">
+        <!-- Dynamique -->
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-stats-matiere')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Relevé de Notes (Aperçu) -->
+  <div id="modal-bulletin" class="modal-overlay">
+    <div class="modal-card" style="max-width:880px;">
+      <div class="modal-head">
+        <h3>Relevé de Notes & Délibération Officielle</h3>
+        <button class="modal-close-btn" onclick="fermerModal('modal-bulletin')">&times;</button>
+      </div>
+      <div id="bulletin-modal-body" class="modal-body" style="background:#f8fafc; padding:2rem;">
+        <!-- Dynamique -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <!-- Script Principal -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

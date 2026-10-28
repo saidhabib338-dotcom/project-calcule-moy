@@ -1,0 +1,36 @@
+{
+  "name": "gestion-scolarite-lmd",
+  "version": "1.0.0",
+  "description": "Plateforme Web complète de Gestion d'Étudiants et des Notes (LMD) - Architecture SOA, REST API & Service SOAP",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed_mongo.js",
+    "test": "node tests/run_api_tests.js"
+  },
+  "keywords": [
+    "lmd",
+    "scolarite",
+    "notes",
+    "etudiants",
+    "soap",
+    "wsdl",
+    "rest",
+    "express",
+    "mongoose",
+    "mongodb",
+    "swagger"
+  ],
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.1",
+    "soap": "^1.1.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
