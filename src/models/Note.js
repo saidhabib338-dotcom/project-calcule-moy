@@ -27,6 +27,11 @@ const noteSchema = new mongoose.Schema({
     min: [0, 'La note minimale est 0'],
     max: [20, 'La note maximale est 20']
   },
+  statut: {
+    type: String,
+    enum: ['PRESENT', 'ABSENT', 'FRAUDE', 'NON_SAISI'],
+    default: 'PRESENT'
+  },
   dateCreation: {
     type: String,
     default: () => new Date().toISOString().split('T')[0]

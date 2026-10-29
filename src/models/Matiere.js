@@ -47,6 +47,11 @@ const matiereSchema = new mongoose.Schema({
     default: 'L3-INFO',
     trim: true
   },
+  semestre: {
+    type: Number,
+    enum: [1, 2],
+    default: 1
+  },
   isActive: {
     type: Boolean,
     default: true

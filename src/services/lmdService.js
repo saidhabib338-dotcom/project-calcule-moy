@@ -2,63 +2,69 @@ const { db } = require('../db/database');
 
 /**
  * Moteur de calcul LMD (Conforme au Cahier des Charges - Sujet 2)
+ * Règle d'évaluation académique :
+ * Toute matière manquante (non saisie), étudiant absent ou tricherie/fraude est comptabilisée à 0/20.
  */
 
 function round2(val) {
-  if (val === null || val === undefined || isNaN(val)) return null;
+  if (val === null || val === undefined || isNaN(val)) return 0;
   return Math.round(val * 100) / 100;
 }
 
 /**
- * Calculer la moyenne d'une matière pour un étudiant
+ * Déterminer le semestre d'une matière (1 ou 2)
  */
-function calculerMoyenneMatiere(matiere, notesEtudiantMatiere) {
+function getMatiereSemestre(m, allClassMatieres = []) {
+  if (m.semestre === 1 || m.semestre === 2) return Number(m.semestre);
+  if (allClassMatieres && allClassMatieres.length > 1) {
+    const idx = allClassMatieres.findIndex(item => item.id === m.id);
+    if (idx !== -1) {
+      const half = Math.ceil(allClassMatieres.length / 2);
+      return idx < half ? 1 : 2;
+    }
+  }
+  return 1;
+}
+
+/**
+ * Calculer la moyenne d'une matière pour un étudiant
+ * Règle stricte : Toute note manquante, statut ABSENT ou FRAUDE compte pour 0.
+ */
+function calculerMoyenneMatiere(matiere, notesEtudiantMatiere = [], allClassMatieres = []) {
   const noteExam = notesEtudiantMatiere.find(n => n.type === 'EXAMEN');
   const noteDS = notesEtudiantMatiere.find(n => n.type === 'DS');
   const noteTP = notesEtudiantMatiere.find(n => n.type === 'TP');
+
+  const getEffectiveValue = (note) => {
+    if (!note) return 0; // Épreuve manquante = 0
+    if (note.statut === 'ABSENT' || note.statut === 'FRAUDE') return 0;
+    const v = Number(note.valeur);
+    return isNaN(v) ? 0 : Math.max(0, Math.min(20, v));
+  };
 
   const examVal = noteExam ? Number(noteExam.valeur) : null;
   const dsVal = noteDS ? Number(noteDS.valeur) : null;
   const tpVal = noteTP ? Number(noteTP.valeur) : null;
 
-  let moyenne = null;
-  let complet = false;
+  const effExam = getEffectiveValue(noteExam);
+  const effDS = getEffectiveValue(noteDS);
+  const effTP = getEffectiveValue(noteTP);
 
+  const hasAnyNote = Boolean(noteExam || noteDS || noteTP);
+
+  let moyenne = 0;
   if (matiere.hasTP) {
-    if (examVal !== null && dsVal !== null && tpVal !== null) {
-      // Formule 10a: (Examen x 70%) + (DS x 20%) + (TP x 10%)
-      moyenne = (examVal * 0.70) + (dsVal * 0.20) + (tpVal * 0.10);
-      complet = true;
-    } else {
-      // Moyenne partielle si notes disponibles
-      const parts = [];
-      let weights = 0;
-      if (examVal !== null) { parts.push(examVal * 0.70); weights += 0.70; }
-      if (dsVal !== null) { parts.push(dsVal * 0.20); weights += 0.20; }
-      if (tpVal !== null) { parts.push(tpVal * 0.10); weights += 0.10; }
-      if (weights > 0) {
-        moyenne = parts.reduce((a, b) => a + b, 0) / weights;
-      }
-    }
+    // Formule 10a: (Examen x 70%) + (DS x 20%) + (TP x 10%)
+    moyenne = (effExam * 0.70) + (effDS * 0.20) + (effTP * 0.10);
   } else {
-    if (examVal !== null && dsVal !== null) {
-      // Formule 10b: (Examen x 80%) + (DS x 20%)
-      moyenne = (examVal * 0.80) + (dsVal * 0.20);
-      complet = true;
-    } else {
-      const parts = [];
-      let weights = 0;
-      if (examVal !== null) { parts.push(examVal * 0.80); weights += 0.80; }
-      if (dsVal !== null) { parts.push(dsVal * 0.20); weights += 0.20; }
-      if (weights > 0) {
-        moyenne = parts.reduce((a, b) => a + b, 0) / weights;
-      }
-    }
+    // Formule 10b: (Examen x 80%) + (DS x 20%)
+    moyenne = (effExam * 0.80) + (effDS * 0.20);
   }
 
   const moyenneArrondie = round2(moyenne);
-  const estValidee = moyenneArrondie !== null ? moyenneArrondie >= 10.0 : false;
+  const estValidee = moyenneArrondie >= 10.0;
   const creditsObtenus = estValidee ? Number(matiere.credits) : 0;
+  const semestre = getMatiereSemestre(matiere, allClassMatieres);
 
   return {
     matiereId: matiere.id,
@@ -68,55 +74,83 @@ function calculerMoyenneMatiere(matiere, notesEtudiantMatiere) {
     coefficient: Number(matiere.coefficient),
     credits: Number(matiere.credits),
     hasTP: Boolean(matiere.hasTP),
+    enseignant: matiere.enseignant || 'Non assigné',
+    classe: matiere.classe,
+    semestre,
     notes: {
       ds: dsVal,
       examen: examVal,
-      tp: tpVal
+      tp: tpVal,
+      dsStatut: noteDS?.statut || (noteDS ? 'PRESENT' : 'NON_SAISI'),
+      examStatut: noteExam?.statut || (noteExam ? 'PRESENT' : 'NON_SAISI'),
+      tpStatut: noteTP?.statut || (noteTP ? 'PRESENT' : 'NON_SAISI')
     },
     moyenne: moyenneArrondie,
     estValidee,
     creditsObtenus,
-    estComplet: complet
+    estComplet: Boolean(noteExam && noteDS && (!matiere.hasTP || noteTP)),
+    hasAnyNote
   };
 }
 
 /**
  * Calculer la délibération complète d'un étudiant selon les règles LMD
+ * Sépare Semestre 1 et Semestre 2, et applique la règle du 0 pour toute absence, fraude ou matière non saisie.
  */
 function calculerDeliberationEtudiant(etudiantId) {
   const etudiant = db.collection('etudiants').findById(etudiantId);
   if (!etudiant) return null;
 
-  const matieres = db.collection('matieres').find({ isActive: true });
+  let matieres = db.collection('matieres').find({ isActive: true });
+  if (etudiant.classe) {
+    const classMat = matieres.filter(m => !m.classe || m.classe === etudiant.classe);
+    if (classMat.length > 0) matieres = classMat;
+  }
+
   const allNotes = db.collection('notes').find({ etudiantId });
 
   const detailsMatieres = matieres.map(m => {
     const notesMatiere = allNotes.filter(n => n.matiereId === m.id);
-    return calculerMoyenneMatiere(m, notesMatiere);
+    return calculerMoyenneMatiere(m, notesMatiere, matieres);
   });
 
-  let sommeProduits = 0;
-  let totalCoefficients = 0;
-  let creditsValides = 0;
-  let creditsTotaux = 0;
-  const matieresCapitalisees = [];
+  // Calcul pour le Semestre 1 et le Semestre 2
+  const matieresS1 = detailsMatieres.filter(m => Number(m.semestre) === 1);
+  const matieresS2 = detailsMatieres.filter(m => Number(m.semestre) === 2);
 
-  for (const detail of detailsMatieres) {
-    creditsTotaux += detail.credits;
-    if (detail.moyenne !== null) {
-      sommeProduits += detail.moyenne * detail.coefficient;
-      totalCoefficients += detail.coefficient;
-    }
-    if (detail.estValidee) {
-      creditsValides += detail.creditsObtenus;
-      matieresCapitalisees.push({
-        code: detail.code,
-        intitule: detail.intitule,
-        moyenne: detail.moyenne,
-        credits: detail.creditsObtenus
-      });
-    }
+  let sumProdS1 = 0, coefS1 = 0, credsValS1 = 0, credsTotS1 = 0;
+  for (const m of matieresS1) {
+    credsTotS1 += m.credits;
+    sumProdS1 += (m.moyenne * m.coefficient);
+    coefS1 += m.coefficient;
+    if (m.estValidee) credsValS1 += m.creditsObtenus;
   }
+  const moyenneS1 = coefS1 > 0 ? round2(sumProdS1 / coefS1) : 0;
+
+  let sumProdS2 = 0, coefS2 = 0, credsValS2 = 0, credsTotS2 = 0;
+  for (const m of matieresS2) {
+    credsTotS2 += m.credits;
+    sumProdS2 += (m.moyenne * m.coefficient);
+    coefS2 += m.coefficient;
+    if (m.estValidee) credsValS2 += m.creditsObtenus;
+  }
+  const moyenneS2 = coefS2 > 0 ? round2(sumProdS2 / coefS2) : 0;
+
+  // Calcul Global Annuel
+  let sommeProduits = sumProdS1 + sumProdS2;
+  let totalCoefficients = coefS1 + coefS2;
+  let creditsValides = credsValS1 + credsValS2;
+  let creditsTotaux = credsTotS1 + credsTotS2;
+
+  const matieresCapitalisees = detailsMatieres
+    .filter(m => m.estValidee)
+    .map(m => ({
+      code: m.code,
+      intitule: m.intitule,
+      moyenne: m.moyenne,
+      credits: m.creditsObtenus,
+      semestre: m.semestre
+    }));
 
   const moyenneGenerale = totalCoefficients > 0 ? round2(sommeProduits / totalCoefficients) : 0;
 
@@ -125,7 +159,6 @@ function calculerDeliberationEtudiant(etudiantId) {
   let statut = 'Ajourné';
   let observation = '';
 
-  // Règle 45/60 crédits LMD (ou prorata si moins de 60 crédits dans le jeu de test)
   const seuilCreditsRachat = creditsTotaux >= 60 ? 45 : Math.round(creditsTotaux * 0.75);
 
   if (moyenneGenerale >= 10.0) {
@@ -139,7 +172,7 @@ function calculerDeliberationEtudiant(etudiantId) {
     } else {
       mention = 'Passable';
     }
-    observation = `Semestre / Année validé(e) avec succès (${creditsValides}/${creditsTotaux} crédits ECTS).`;
+    observation = `Année validée avec succès (${creditsValides}/${creditsTotaux} crédits ECTS).`;
   } else if (moyenneGenerale >= 9.0 && creditsValides >= seuilCreditsRachat) {
     statut = 'Admis par Rachat';
     mention = 'Passable';
@@ -160,6 +193,20 @@ function calculerDeliberationEtudiant(etudiantId) {
       numeroEtudiant: etudiant.numeroEtudiant,
       isActive: etudiant.isActive
     },
+    semestre1: {
+      moyenne: moyenneS1,
+      totalCoefficients: coefS1,
+      creditsValides: credsValS1,
+      creditsTotaux: credsTotS1,
+      matieres: matieresS1
+    },
+    semestre2: {
+      moyenne: moyenneS2,
+      totalCoefficients: coefS2,
+      creditsValides: credsValS2,
+      creditsTotaux: credsTotS2,
+      matieres: matieresS2
+    },
     moyenneGenerale,
     creditsValides,
     creditsTotaux,
@@ -173,10 +220,13 @@ function calculerDeliberationEtudiant(etudiantId) {
 }
 
 /**
- * Calculer le classement officiel pour une classe
+ * Calculer le classement officiel pour une classe ou l'ensemble de l'établissement
  */
 function calculerClassementClasse(classe) {
-  const etudiants = db.collection('etudiants').find({ classe, isActive: true });
+  let etudiants = db.collection('etudiants').find({ isActive: true });
+  if (classe && classe !== 'ALL' && classe !== 'TOUTES' && classe !== 'Toutes') {
+    etudiants = etudiants.filter(e => e.classe === classe);
+  }
   const deliberations = etudiants.map(e => calculerDeliberationEtudiant(e.id)).filter(Boolean);
 
   // Trier par moyenne générale décroissante

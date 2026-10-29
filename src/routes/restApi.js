@@ -307,7 +307,7 @@ async function handleRestRoutes(req, res, pathname, query, body) {
   }
 
   if (pathname === '/api/v1/matieres' && req.method === 'POST') {
-    const { code, intitule, coefficient, credits, hasTP, enseignant } = body || {};
+    const { code, intitule, coefficient, credits, hasTP, enseignant, classe, semestre, uniteEnseignement } = body || {};
 
     if (!code || !intitule || coefficient === undefined || credits === undefined) {
       return sendJson(400, {
@@ -340,6 +340,9 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       credits: Number(credits),
       hasTP: Boolean(hasTP),
       enseignant: enseignant ? enseignant.trim() : 'Non assigné',
+      classe: classe ? classe.trim() : 'L3-INFO',
+      semestre: semestre ? Number(semestre) : 1,
+      uniteEnseignement: uniteEnseignement || 'UE Générale',
       isActive: true
     });
 
@@ -394,13 +397,16 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       return sendJson(404, { success: false, error: 'Matière introuvable' });
     }
 
-    const { intitule, coefficient, credits, hasTP, enseignant, isActive } = body || {};
+    const { intitule, coefficient, credits, hasTP, enseignant, classe, semestre, uniteEnseignement, isActive } = body || {};
     const updated = db.collection('matieres').findByIdAndUpdate(id, {
       ...(intitule && { intitule: intitule.trim() }),
       ...(coefficient !== undefined && { coefficient: Number(coefficient) }),
       ...(credits !== undefined && { credits: Number(credits) }),
       ...(hasTP !== undefined && { hasTP: Boolean(hasTP) }),
       ...(enseignant !== undefined && { enseignant: enseignant.trim() }),
+      ...(classe !== undefined && { classe: classe.trim() }),
+      ...(semestre !== undefined && { semestre: Number(semestre) }),
+      ...(uniteEnseignement !== undefined && { uniteEnseignement: uniteEnseignement.trim() }),
       ...(isActive !== undefined && { isActive: Boolean(isActive) })
     });
 
@@ -443,13 +449,24 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       });
     }
 
-    // 2. Validation de l'intervalle [0..20] (Contrainte CT5 / Besoin 13)
-    const numValeur = Number(valeur);
-    if (isNaN(numValeur) || numValeur < 0 || numValeur > 20) {
-      return sendJson(400, {
-        success: false,
-        error: `Note invalide (${valeur}). La note doit obligatoirement être comprise entre 0 et 20 (400 Bad Request)`
-      });
+    // 2. Validation de l'intervalle [0..20] ou Statut Spécial (ABSENT / FRAUDE = 0)
+    let finalValeur = 0;
+    let finalStatut = 'PRESENT';
+    if (valeur === 'ABS' || body.statut === 'ABSENT') {
+      finalValeur = 0;
+      finalStatut = 'ABSENT';
+    } else if (valeur === 'FRAUDE' || valeur === '8ach' || body.statut === 'FRAUDE') {
+      finalValeur = 0;
+      finalStatut = 'FRAUDE';
+    } else {
+      const numValeur = Number(valeur);
+      if (isNaN(numValeur) || numValeur < 0 || numValeur > 20) {
+        return sendJson(400, {
+          success: false,
+          error: `Note invalide (${valeur}). La note doit obligatoirement être comprise entre 0 et 20 (400 Bad Request)`
+        });
+      }
+      finalValeur = numValeur;
     }
 
     // 3. Vérification de l'existence et du statut actif de l'étudiant (Besoin 17 -> 404)
@@ -468,6 +485,26 @@ async function handleRestRoutes(req, res, pathname, query, body) {
         success: false,
         error: `La matière spécifiée (${matiereId}) n'existe pas ou est inactive (404 Not Found)`
       });
+    }
+
+    // Droits enseignant : l'enseignant ne peut évaluer que ses propres matières et ses étudiants
+    if (currentUser && currentUser.role === 'ENSEIGNANT') {
+      const teacherName = (currentUser.nom || '').toLowerCase().trim();
+      const assignedCodes = (currentUser.matieresAssociees || []).map(c => c.toLowerCase());
+      const isTeacherOfMat = (matiere.enseignant && matiere.enseignant.toLowerCase().trim() === teacherName) ||
+                             (matiere.code && assignedCodes.includes(matiere.code.toLowerCase()));
+      if (!isTeacherOfMat) {
+        return sendJson(403, {
+          success: false,
+          error: `Accès refusé : Vous n'êtes pas l'enseignant responsable de la matière ${matiere.intitule}.`
+        });
+      }
+      if (matiere.classe && etudiant.classe && matiere.classe !== etudiant.classe) {
+        return sendJson(403, {
+          success: false,
+          error: `Accès refusé : L'étudiant ${etudiant.nom} n'appartient pas à la classe ${matiere.classe}.`
+        });
+      }
     }
 
     // Si la matière n'a pas de TP et qu'on essaie d'ajouter un TP
@@ -496,20 +533,21 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       etudiantId,
       matiereId,
       type: upperType,
-      valeur: numValeur,
+      valeur: finalValeur,
+      statut: finalStatut,
       dateCreation: new Date().toISOString().split('T')[0]
     });
 
     return sendJson(201, {
       success: true,
-      message: `Note de ${upperType} (${numValeur}/20) enregistrée avec succès`,
+      message: `Note de ${upperType} (${finalValeur}/20${finalStatut !== 'PRESENT' ? ' - ' + finalStatut : ''}) enregistrée avec succès`,
       data: newNote
     });
   }
 
   // Saisie / Mise à jour en bloc de la grille des notes d'un étudiant (Plan d'étude complet)
   if (pathname === '/api/v1/notes/grille' && req.method === 'POST') {
-    const { etudiantId, notes } = body || {};
+    let { etudiantId, notes } = body || {};
     if (!etudiantId || !Array.isArray(notes)) {
       return sendJson(400, { success: false, error: 'Identifiant étudiant et tableau de notes requis' });
     }
@@ -518,9 +556,31 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       return sendJson(404, { success: false, error: 'Étudiant introuvable ou inactif' });
     }
 
+    // Sécurité Enseignant : Uniquement les étudiants de ses classes et uniquement ses matières
+    if (currentUser && currentUser.role === 'ENSEIGNANT') {
+      const teacherName = (currentUser.nom || '').toLowerCase().trim();
+      const assignedCodes = (currentUser.matieresAssociees || []).map(c => c.toLowerCase());
+      const teacherMatieres = db.collection('matieres').find({ isActive: true }).filter(m => {
+        const matchName = m.enseignant && m.enseignant.toLowerCase().trim() === teacherName;
+        const matchCode = m.code && assignedCodes.includes(m.code.toLowerCase());
+        return matchName || matchCode;
+      });
+      const teacherClasses = new Set(teacherMatieres.map(m => m.classe).filter(Boolean));
+
+      if (!teacherClasses.has(etudiant.classe)) {
+        return sendJson(403, {
+          success: false,
+          error: `Accès refusé : L'étudiant ${etudiant.nom} ${etudiant.prenom} (${etudiant.classe}) ne suit aucun de vos cours.`
+        });
+      }
+
+      const teacherMatIds = new Set(teacherMatieres.map(m => m.id));
+      notes = notes.filter(n => teacherMatIds.has(n.matiereId));
+    }
+
     const saved = [];
     for (const item of notes) {
-      const { matiereId, type, valeur } = item;
+      const { matiereId, type, valeur, statut } = item;
       if (!matiereId || !type) continue;
       const upperType = type.trim().toUpperCase();
 
@@ -531,24 +591,37 @@ async function handleRestRoutes(req, res, pathname, query, body) {
         continue;
       }
 
-      const numVal = Number(valeur);
-      if (isNaN(numVal) || numVal < 0 || numVal > 20) {
-        return sendJson(400, {
-          success: false,
-          error: `Note invalide (${valeur}). Chaque note doit obligatoirement être comprise entre 0 et 20.`
-        });
+      let finalVal = 0;
+      let finalStatut = statut || 'PRESENT';
+
+      if (valeur === 'ABS' || statut === 'ABSENT') {
+        finalVal = 0;
+        finalStatut = 'ABSENT';
+      } else if (valeur === 'FRAUDE' || valeur === '8ach' || statut === 'FRAUDE') {
+        finalVal = 0;
+        finalStatut = 'FRAUDE';
+      } else {
+        const numVal = Number(valeur);
+        if (isNaN(numVal) || numVal < 0 || numVal > 20) {
+          return sendJson(400, {
+            success: false,
+            error: `Note invalide (${valeur}). Chaque note doit obligatoirement être comprise entre 0 et 20.`
+          });
+        }
+        finalVal = numVal;
       }
 
       const exist = db.collection('notes').findOne({ etudiantId, matiereId, type: upperType });
       if (exist) {
-        const up = db.collection('notes').findByIdAndUpdate(exist.id, { valeur: numVal });
+        const up = db.collection('notes').findByIdAndUpdate(exist.id, { valeur: finalVal, statut: finalStatut });
         saved.push(up);
       } else {
         const ins = db.collection('notes').insertOne({
           etudiantId,
           matiereId,
           type: upperType,
-          valeur: numVal,
+          valeur: finalVal,
+          statut: finalStatut,
           dateCreation: new Date().toISOString().split('T')[0]
         });
         saved.push(ins);
@@ -685,6 +758,12 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       return sendJson(404, { success: false, error: 'Étudiant introuvable' });
     }
     return sendJson(200, { success: true, data: deliberation });
+  }
+
+  if (pathname === '/api/v1/deliberations' && req.method === 'GET') {
+    const classe = query.classe || 'ALL';
+    const classement = calculerClassementClasse(classe);
+    return sendJson(200, { success: true, count: classement.length, data: classement });
   }
 
   if (pathname.match(/^\/api\/v1\/deliberations\/classe\/([a-zA-Z0-9_%-]+)$/) && req.method === 'GET') {

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portail Numérique Universitaire - Espace Étudiant & Scolarité</title>
-  <meta name="description" content="Espace numérique de travail universitaire pour la consultation des résultats, la gestion des notes et les réclamations.">
+  <title>My University - Portail Numérique Académique (Licences, Ingénieurs, Mastères)</title>
+  <meta name="description" content="Portail académique de My University pour la gestion des délibérations, relevés officiels et contrôle des notes.">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
 </head>
 <body>
 
@@ -20,16 +20,16 @@
       <div class="auth-side-info">
         <div>
           <div class="auth-univ-header">
-            <div class="auth-univ-emblem">🎓</div>
+            <div class="auth-univ-emblem">🏛️</div>
             <div class="auth-univ-titles">
-              <h2>UNIVERSITÉ CENTRALE</h2>
-              <p>Espace Numérique de Travail (ENT)</p>
+              <h2>MY UNIVERSITY</h2>
+              <p>Portail Académique & Système de Délibération LMD</p>
             </div>
           </div>
 
           <div class="auth-portal-desc">
-            <h3>Bienvenue sur votre portail académique</h3>
-            <p>Accédez à l'ensemble de vos services universitaires en ligne : consultation des notes, relevés officiels et démarches pédagogiques.</p>
+            <h3>Portail des Délibérations & Examens</h3>
+            <p>Plateforme académique officielle de My University : Licences LMD, Cycles d'Ingénieurs et Mastères.</p>
 
             <div class="auth-portal-bullets">
               <div class="auth-bullet">
@@ -67,7 +67,7 @@
         <form id="form-login">
           <div class="form-field">
             <label class="form-label" for="login-email">Adresse Email Institutionnelle :</label>
-            <input type="email" id="login-email" class="form-control" placeholder="prenom.nom@etud.univ.tn" required autocomplete="username">
+            <input type="email" id="login-email" class="form-control" placeholder="prenom.nom@myuniversity.tn" required autocomplete="username">
           </div>
 
           <div class="form-field">
@@ -95,10 +95,10 @@
     <!-- BARRE SUPÉRIEURE -->
     <header class="navbar">
       <a href="#" class="nav-brand" onclick="return false;">
-        <div class="brand-emblem">🎓</div>
+        <div class="brand-emblem">🏛️</div>
         <div class="brand-text">
-          <h1>UNIVERSITÉ CENTRALE</h1>
-          <p id="portal-sub-title">Portail des Études & Délibérations</p>
+          <h1>MY UNIVERSITY</h1>
+          <p id="portal-sub-title">My University • Licences, Ingénieurs & Mastères</p>
         </div>
       </a>
 
@@ -209,12 +209,13 @@
 
             <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
               <button class="btn btn-secondary btn-sm filter-class-btn active" data-class="">Toutes</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-INFO">L3-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-GL">M1-GL</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-TIC">L2-TIC</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-INFO">L2-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-DSI">L3-DSI</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-IA">M1-IA</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L1-INFO" title="Licence 1 Informatique">L1-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-INFO" title="Licence 2 Informatique">L2-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-INFO" title="Licence 3 Informatique">L3-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="ING1-INFO" title="Cycle Ingénieur Informatique 1">ING1-INFO</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="ING2-GL" title="Cycle Ingénieur Génie Logiciel">ING2-GL</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-GL" title="Mastère Pro Génie Logiciel">M1-GL</button>
+              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-SPI" title="Mastère Recherche Systèmes Pervasifs & IoT">M1-SPI</button>
             </div>
 
             <button class="btn btn-primary btn-sm role-tab-admin" onclick="ouvrirAjouterEtudiantModal()">
@@ -268,9 +269,12 @@
             <label for="matieres-filter-niveau" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Niveau :</label>
             <select id="matieres-filter-niveau" class="filter-select" onchange="filtrerMatieres()">
               <option value="">Tous les niveaux</option>
+              <option value="L1">Licence 1 (L1)</option>
               <option value="L2">Licence 2 (L2)</option>
               <option value="L3">Licence 3 (L3)</option>
-              <option value="M1">Master 1 (M1)</option>
+              <option value="ING1">Cycle Ingénieur 1 (ING1)</option>
+              <option value="ING2">Cycle Ingénieur 2 (ING2)</option>
+              <option value="M1">Mastère 1 (M1)</option>
             </select>
           </div>
 
@@ -387,10 +391,21 @@
 
           <!-- Filtre Classe -->
           <select id="notes-filter-classe" class="filter-select" onchange="appliquerFiltresNotes()">
-            <option value="">Toutes les promotions</option>
-            <option value="L3-INFO">L3 Informatique</option>
-            <option value="M1-GL">M1 Génie Logiciel</option>
-            <option value="L2-TIC">L2 TIC</option>
+            <option value="">Toutes les promotions (My University)</option>
+            <option value="L1-INFO">Licence 1 Informatique (L1-INFO)</option>
+            <option value="L2-INFO">Licence 2 Informatique (L2-INFO)</option>
+            <option value="L3-INFO">Licence 3 Informatique (L3-INFO)</option>
+            <option value="ING1-INFO">Cycle Ingénieur Informatique 1 (ING1-INFO)</option>
+            <option value="ING2-GL">Cycle Ingénieur Génie Logiciel (ING2-GL)</option>
+            <option value="M1-GL">Mastère Pro Génie Logiciel (M1-GL)</option>
+            <option value="M1-SPI">Mastère Recherche Systèmes Pervasifs & IoT (M1-SPI)</option>
+          </select>
+
+          <!-- Filtre Semestre (S1 / S2 / Annuel) -->
+          <select id="notes-filter-semestre" class="filter-select" onchange="appliquerFiltresNotes()">
+            <option value="">Tous les semestres (Annuel)</option>
+            <option value="1">Semestre 1 (S1)</option>
+            <option value="2">Semestre 2 (S2)</option>
           </select>
 
           <!-- Filtre Matière -->
@@ -421,12 +436,12 @@
         <div id="notes-view-grille" style="display:none;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; background:rgba(255,255,255,0.02); padding:0.85rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border-card);">
             <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap; flex:1;">
-              <!-- Recherche rapide par ID / N° Inscription -->
+              <!-- Recherche rapide par ID ou Nom -->
               <input type="text" 
                      id="grille-quick-student-id" 
                      class="search-box" 
-                     style="width:230px;" 
-                     placeholder="🔍 Saisir N° Étudiant (ex: ETU-2026-001)..." 
+                     style="min-width:270px;" 
+                     placeholder="🔍 N° Étudiant (ex: ETU-2026-001) ou Nom..." 
                      oninput="rechercherEtudiantParId(this.value)">
 
               <span style="font-size:0.85rem; font-weight:700; color:white;">ou sélectionner :</span>
@@ -588,19 +603,20 @@
 
           <div class="form-grid-2">
             <div class="form-field">
-              <label class="form-label">Classe :</label>
+              <label class="form-label">Classe / Filière :</label>
               <select id="form-etudiant-classe" class="form-control" required>
-                <option value="L3-INFO">L3 Informatique (L3-INFO)</option>
-                <option value="M1-GL">M1 Génie Logiciel (M1-GL)</option>
-                <option value="L2-TIC">L2 TIC (L2-TIC)</option>
-                <option value="L2-INFO">L2 Informatique (L2-INFO)</option>
-                <option value="L3-DSI">L3 DSI (L3-DSI)</option>
-                <option value="M1-IA">M1 Intelligence Artificielle (M1-IA)</option>
+                <option value="L1-INFO">Licence 1 Informatique (L1-INFO)</option>
+                <option value="L2-INFO">Licence 2 Informatique (L2-INFO)</option>
+                <option value="L3-INFO">Licence 3 Informatique (L3-INFO)</option>
+                <option value="ING1-INFO">Cycle Ingénieur Informatique 1 (ING1-INFO)</option>
+                <option value="ING2-GL">Cycle Ingénieur Génie Logiciel (ING2-GL)</option>
+                <option value="M1-GL">Mastère Pro Génie Logiciel (M1-GL)</option>
+                <option value="M1-SPI">Mastère Recherche Systèmes Pervasifs & IoT (M1-SPI)</option>
               </select>
             </div>
             <div class="form-field">
               <label class="form-label">Email Universitaire :</label>
-              <input type="email" id="form-etudiant-email" class="form-control" required placeholder="prenom.nom@etud.univ.tn">
+              <input type="email" id="form-etudiant-email" class="form-control" required placeholder="prenom.nom@myuniversity.tn">
             </div>
           </div>
         </div>
@@ -652,21 +668,31 @@
             <div class="form-field">
               <label class="form-label">Promotion / Classe :</label>
               <select id="form-mat-classe" class="form-control" required>
-                <option value="L3-INFO">L3 Informatique (L3-INFO)</option>
-                <option value="M1-GL">M1 Génie Logiciel (M1-GL)</option>
-                <option value="L2-TIC">L2 TIC (L2-TIC)</option>
-                <option value="L2-INFO">L2 Informatique (L2-INFO)</option>
-                <option value="L3-DSI">L3 DSI (L3-DSI)</option>
-                <option value="M1-IA">M1 Intelligence Artificielle (M1-IA)</option>
+                <option value="L1-INFO">Licence 1 Informatique (L1-INFO)</option>
+                <option value="L2-INFO">Licence 2 Informatique (L2-INFO)</option>
+                <option value="L3-INFO">Licence 3 Informatique (L3-INFO)</option>
+                <option value="ING1-INFO">Cycle Ingénieur Informatique 1 (ING1-INFO)</option>
+                <option value="ING2-GL">Cycle Ingénieur Génie Logiciel (ING2-GL)</option>
+                <option value="M1-GL">Mastère Pro Génie Logiciel (M1-GL)</option>
+                <option value="M1-SPI">Mastère Recherche Systèmes Pervasifs & IoT (M1-SPI)</option>
               </select>
             </div>
           </div>
 
-          <div class="form-field">
-            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; cursor:pointer;">
-              <input type="checkbox" id="form-mat-hastp" style="accent-color:var(--primary);">
-              <span>Comporte des Travaux Pratiques (TP)</span>
-            </label>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label">Semestre Universitaire :</label>
+              <select id="form-mat-semestre" class="form-control" required>
+                <option value="1">Semestre 1 (S1)</option>
+                <option value="2">Semestre 2 (S2)</option>
+              </select>
+            </div>
+            <div class="form-field" style="display:flex; align-items:center; margin-top:1.5rem;">
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="form-mat-hastp" style="accent-color:var(--primary);">
+                <span>Comporte des Travaux Pratiques (TP)</span>
+              </label>
+            </div>
           </div>
         </div>
         <div class="modal-foot">
@@ -709,6 +735,10 @@
             <div class="form-field">
               <label class="form-label">Note sur 20 :</label>
               <input type="number" id="form-note-valeur" class="form-control" min="0" max="20" step="0.25" required placeholder="Ex: 14.5">
+              <div style="display:flex; gap:0.4rem; margin-top:0.4rem;">
+                <button type="button" class="btn-quick-tag abs" onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour absence">Absent (0)</button>
+                <button type="button" class="btn-quick-tag fraude" onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour fraude">Fraude / 8ach (0)</button>
+              </div>
             </div>
           </div>
         </div>

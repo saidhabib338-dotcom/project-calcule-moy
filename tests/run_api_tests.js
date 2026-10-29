@@ -115,7 +115,7 @@ async function runTests() {
     const resDup = await request('/api/v1/etudiants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-      body: JSON.stringify({ nom: 'Mansouri', prenom: 'Sarah', classe: 'L3-INFO', email: 'sarah.mansouri@etud.univ.tn' })
+      body: JSON.stringify({ nom: 'Mansouri', prenom: 'Sarah', classe: 'L3-INFO', email: 'sarah.mansouri@myuniversity.tn' })
     });
     assert('Détection doublon email (409 Conflict)', resDup.status === 409);
 
