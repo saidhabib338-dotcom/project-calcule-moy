@@ -418,14 +418,23 @@ async function handleRestRoutes(req, res, pathname, query, body) {
   // ----------------------------------------------------
   // CATALOGUE DES PLANS D'ETUDES OFFICIELS ISSAT (31 Plans / 504 Matières)
   // ----------------------------------------------------
+  // 3b. CATALOGUE OFFICIEL DES PLANS D'ÉTUDES (MONGODB + FALLBACK)
+  // ----------------------------------------------------
   if (pathname === '/api/v1/plans-etudes' && req.method === 'GET') {
-    const plansPath = path.join(__dirname, '../data/plans_etude_issat_complets.json');
-    if (!fs.existsSync(plansPath)) {
-      return sendJson(404, { success: false, error: 'Catalogue des plans d\'études non disponible' });
+    let list = db.collection('plans_etudes').getAll();
+
+    // Si la collection MongoDB est vide, repli sur le fichier JSON local
+    if (!list || list.length === 0) {
+      const plansPath = path.join(__dirname, '../data/plans_etude_issat_complets.json');
+      if (fs.existsSync(plansPath)) {
+        const plansData = JSON.parse(fs.readFileSync(plansPath, 'utf8'));
+        list = Object.entries(plansData).map(([key, val]) => ({ key, ...val }));
+      } else {
+        return sendJson(404, { success: false, error: 'Catalogue des plans d\'études non disponible' });
+      }
     }
-    const plansData = JSON.parse(fs.readFileSync(plansPath, 'utf8'));
+
     const { departement, annee, specialite, recherche } = query;
-    let list = Object.entries(plansData).map(([key, val]) => ({ key, ...val }));
 
     if (departement) {
       list = list.filter(p => p.departement && p.departement.toLowerCase().includes(departement.toLowerCase()));
@@ -442,13 +451,14 @@ async function handleRestRoutes(req, res, pathname, query, body) {
         (p.filiere && p.filiere.toLowerCase().includes(q)) ||
         (p.specialite && p.specialite.toLowerCase().includes(q)) ||
         (p.departement && p.departement.toLowerCase().includes(q)) ||
-        p.matieres.some(m => m.intitule.toLowerCase().includes(q) || m.code.toLowerCase().includes(q))
+        (p.matieres && p.matieres.some(m => (m.intitule && m.intitule.toLowerCase().includes(q)) || (m.code && m.code.toLowerCase().includes(q))))
       );
     }
 
-    const totalMatieres = list.reduce((sum, p) => sum + p.count, 0);
+    const totalMatieres = list.reduce((sum, p) => sum + (p.count || (p.matieres ? p.matieres.length : 0)), 0);
     return sendJson(200, {
       success: true,
+      source: db.collection('plans_etudes').getAll().length > 0 ? 'mongodb' : 'json_fallback',
       totalPlans: list.length,
       totalMatieres: totalMatieres,
       data: list

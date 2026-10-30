@@ -156,3 +156,4 @@ async function assignTeachers() {
 }
 
 assignTeachers().catch(console.error);
+

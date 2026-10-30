@@ -6,13 +6,15 @@ const Etudiant = require('../models/Etudiant');
 const Matiere = require('../models/Matiere');
 const Note = require('../models/Note');
 const Reclamation = require('../models/Reclamation');
+const PlanEtude = require('../models/PlanEtude');
 
 const models = {
   utilisateurs: Utilisateur,
   etudiants: Etudiant,
   matieres: Matiere,
   notes: Note,
-  reclamations: Reclamation
+  reclamations: Reclamation,
+  plans_etudes: PlanEtude
 };
 
 // Crypto helpers for PBKDF2 password hashing & unique IDs
@@ -32,7 +34,8 @@ class Database {
       etudiants: [],
       matieres: [],
       notes: [],
-      reclamations: []
+      reclamations: [],
+      plans_etudes: []
     };
     this.mongoConnected = false;
     this.readyPromise = this.connectAndInitMongo();
@@ -51,7 +54,7 @@ class Database {
   }
 
   async reloadFromMongo() {
-    const cols = ['utilisateurs', 'etudiants', 'matieres', 'notes', 'reclamations'];
+    const cols = ['utilisateurs', 'etudiants', 'matieres', 'notes', 'reclamations', 'plans_etudes'];
     for (const col of cols) {
       this.data[col] = await models[col].find({}).lean();
     }
@@ -146,7 +149,8 @@ class Database {
         etudiants: this.data.etudiants?.length || 0,
         matieres: this.data.matieres?.length || 0,
         notes: this.data.notes?.length || 0,
-        reclamations: this.data.reclamations?.length || 0
+        reclamations: this.data.reclamations?.length || 0,
+        plans_etudes: this.data.plans_etudes?.length || 0
       }
     };
   }

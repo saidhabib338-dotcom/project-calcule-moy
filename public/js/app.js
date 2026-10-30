@@ -398,9 +398,9 @@ function renderReclamationsTab() {
           ${isEtudiant ? 'Mes Demandes de Vérification de Copie' : (isEnseignant ? 'Réclamations de mes Matières' : 'Recours & Réclamations des Étudiants')}
         </h2>
         <p style="font-size:0.78rem; color:var(--text-muted);">
-          ${isEtudiant 
-            ? 'Consultez le statut de vos réclamations ou signalez une nouvelle erreur constatée.' 
-            : (isEnseignant ? 'Examinez les contestations relatives à vos matières et procédez si nécessaire à la rectification de note.' : 'Supervision et traitement centralisé des réclamations d\'étudiants.')}
+          ${isEtudiant
+      ? 'Consultez le statut de vos réclamations ou signalez une nouvelle erreur constatée.'
+      : (isEnseignant ? 'Examinez les contestations relatives à vos matières et procédez si nécessaire à la rectification de note.' : 'Supervision et traitement centralisé des réclamations d\'étudiants.')}
         </p>
       </div>
       <div>
@@ -478,9 +478,9 @@ function renderReclamationsTab() {
       <tr>
         ${!isEtudiant ? `<td><strong>${r.etudiantNom}</strong> <small style="color:var(--text-dim);">(${r.etudiantClasse || ''})</small></td>` : ''}
         <td>
-          ${isEtudiant 
-            ? `<strong>${r.matiereIntitule}</strong>` 
-            : `<span class="badge badge-code">${r.matiereCode}</span> ${r.matiereIntitule}`}
+          ${isEtudiant
+        ? `<strong>${r.matiereIntitule}</strong>`
+        : `<span class="badge badge-code">${r.matiereCode}</span> ${r.matiereIntitule}`}
         </td>
         <td><span class="badge badge-gray">${r.typeNote}</span></td>
         <td><strong>${r.noteActuelle !== null ? r.noteActuelle.toFixed(2) : '-'} / 20</strong></td>
@@ -553,7 +553,7 @@ function renderEtudiantsTab() {
   if (state.searchQuery) {
     const q = state.searchQuery.toLowerCase().trim();
     filtered = filtered.filter(e =>
-      (e.nom && e.nom.toLowerCase().includes(q)) ||
+        (e.nom && e.nom.toLowerCase().includes(q)) ||
       (e.prenom && e.prenom.toLowerCase().includes(q)) ||
       (e.numeroEtudiant && e.numeroEtudiant.toLowerCase().includes(q)) ||
       (e.classe && e.classe.toLowerCase().includes(q)) ||
@@ -577,9 +577,9 @@ function renderEtudiantsTab() {
         <td><span class="badge badge-gray">${e.classe}</span></td>
         <td><span style="color:var(--text-muted); font-size:0.8rem;">${e.email}</span></td>
         <td>
-          ${isActif 
-            ? '<span class="badge badge-admis">Inscrit</span>' 
-            : '<span class="badge badge-gray">Archivé</span>'}
+          ${isActif
+        ? '<span class="badge badge-admis">Inscrit</span>'
+        : '<span class="badge badge-gray">Archivé</span>'}
         </td>
         <td>
           <div style="display:flex; gap:0.35rem; align-items:center;">
@@ -2589,7 +2589,7 @@ function renderDeliberationsContent() {
   const totalEtud = list.length;
   const totalAdmis = list.filter(d => d.statut === 'Admis' || d.statut === 'Admis par Rachat').length;
   const tauxReussite = totalEtud > 0 ? Math.round((totalAdmis / totalEtud) * 100) : 0;
-  const gpaMoy = totalEtud > 0 
+  const gpaMoy = totalEtud > 0
     ? (list.reduce((acc, d) => acc + (filters.semestre === 'S1' ? (d.semestre1?.moyenne || 0) : (filters.semestre === 'S2' ? (d.semestre2?.moyenne || 0) : d.moyenneGenerale)), 0) / totalEtud).toFixed(2)
     : '0.00';
 
@@ -3181,9 +3181,9 @@ function generateBulletinHtml(d, isDirectPage = false) {
         <td style="text-align:center;"><strong>${m.moyenne !== null ? m.moyenne.toFixed(2) : '0.00'} / 20</strong></td>
         <td style="text-align:center;">${m.creditsObtenus} / ${m.credits}</td>
         <td style="text-align:center;">
-          ${m.estValidee 
-            ? '<span style="color:#10b981; font-weight:700;">Validée</span>' 
-            : '<span style="color:#ef4444; font-weight:700;">Non acquise</span>'}
+          ${m.estValidee
+        ? '<span style="color:#10b981; font-weight:700;">Validée</span>'
+        : '<span style="color:#ef4444; font-weight:700;">Non acquise</span>'}
         </td>
       </tr>
     `).join('');
@@ -3699,7 +3699,7 @@ async function telechargerExportCSV() {
     if (state.currentDeliberationsList && state.currentDeliberationsList.length > 0) {
       const period = state.delibFilters?.semestre || 'ANNUEL';
       let csvContent = "\uFEFF"; // UTF-8 BOM pour Excel
-      
+
       if (period === 'S1') {
         csvContent += "Rang,Numero_Inscription,Nom,Prenom,Classe,Moyenne_S1,Credits_S1,Decision_S1\n";
         state.currentDeliberationsList.forEach((d, i) => {
@@ -3766,7 +3766,7 @@ async function fetchPlansEtudes() {
     if (res.success && res.data) {
       state.plansEtudes = res.data;
       state.filteredPlans = [...res.data];
-      
+
       const badgePlans = document.getElementById('badge-total-plans-count');
       const badgeMat = document.getElementById('badge-total-matieres-count');
       if (badgePlans) badgePlans.textContent = `${res.totalPlans || res.data.length} Plans Officiels`;
@@ -3787,9 +3787,9 @@ function filtrerPlansEtudes() {
     if (annee && (!p.annee || p.annee.toLowerCase() !== annee)) return false;
     if (search) {
       const matchHeader = (p.filiere && p.filiere.toLowerCase().includes(search)) ||
-                          (p.specialite && p.specialite.toLowerCase().includes(search)) ||
-                          (p.departement && p.departement.toLowerCase().includes(search));
-      const matchMatiere = p.matieres.some(m => 
+        (p.specialite && p.specialite.toLowerCase().includes(search)) ||
+        (p.departement && p.departement.toLowerCase().includes(search));
+      const matchMatiere = p.matieres.some(m =>
         (m.intitule && m.intitule.toLowerCase().includes(search)) ||
         (m.code && m.code.toLowerCase().includes(search)) ||
         (m.uniteEnseignement && m.uniteEnseignement.toLowerCase().includes(search))
@@ -3859,7 +3859,7 @@ function renderPlansEtudesTab() {
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
             <h5 style="color:#38bdf8; font-size:0.88rem; font-weight:700;">📌 ${semLabel} (${mats.length} Matières)</h5>
             <span style="font-size:0.75rem; color:var(--text-muted);">
-              Total Semestre : <strong>${mats.reduce((s,m)=>s+m.credits, 0)} ECTS</strong> | Coef <strong>${mats.reduce((s,m)=>s+m.coefficient, 0)}</strong>
+              Total Semestre : <strong>${mats.reduce((s, m) => s + m.credits, 0)} ECTS</strong> | Coef <strong>${mats.reduce((s, m) => s + m.coefficient, 0)}</strong>
             </span>
           </div>
           <div class="table-responsive" style="border:1px solid var(--border-card); border-radius:var(--radius-sm); overflow:hidden;">

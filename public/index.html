@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My University - Portail Numérique Académique (Licences, Ingénieurs, Mastères)</title>
-  <meta name="description" content="Portail académique de My University pour la gestion des délibérations, relevés officiels et contrôle des notes.">
+  <meta name="description"
+    content="Portail académique de My University pour la gestion des délibérations, relevés officiels et contrôle des notes.">
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
 </head>
+
 <body>
 
   <!-- ============================================================
@@ -15,7 +19,7 @@
        ============================================================ -->
   <div id="auth-view">
     <div class="auth-card">
-      
+
       <!-- Présentation Institutionnelle -->
       <div class="auth-side-info">
         <div>
@@ -67,12 +71,14 @@
         <form id="form-login">
           <div class="form-field">
             <label class="form-label" for="login-email">Adresse Email Institutionnelle :</label>
-            <input type="email" id="login-email" class="form-control" placeholder="prenom.nom@myuniversity.tn" required autocomplete="username">
+            <input type="email" id="login-email" class="form-control" placeholder="prenom.nom@myuniversity.tn" required
+              autocomplete="username">
           </div>
 
           <div class="form-field">
             <label class="form-label" for="login-password">Mot de passe :</label>
-            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required
+              autocomplete="current-password">
           </div>
 
           <div style="margin-top: 1.25rem;">
@@ -208,7 +214,8 @@
           </div>
 
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-            <input type="text" id="global-search" class="search-box" style="min-width:220px;" placeholder="🔍 Rechercher étudiant, matricule, classe, email...">
+            <input type="text" id="global-search" class="search-box" style="min-width:220px;"
+              placeholder="🔍 Rechercher étudiant, matricule, classe, email...">
 
             <!-- Filtre Cycle -->
             <select id="etudiants-filter-cycle" class="filter-select" onchange="filtrerEtudiantsParCycle(this.value)">
@@ -219,7 +226,8 @@
             </select>
 
             <!-- Filtre Promotion (Classe dynamique) -->
-            <select id="etudiants-filter-classe" class="filter-select" style="min-width:180px;" onchange="filtrerEtudiantsParClasse(this.value)">
+            <select id="etudiants-filter-classe" class="filter-select" style="min-width:180px;"
+              onchange="filtrerEtudiantsParClasse(this.value)">
               <option value="">Toutes les promotions</option>
             </select>
 
@@ -266,12 +274,16 @@
         </div>
 
         <!-- BARRE DE FILTRAGE PAR NIVEAU & SECTION -->
-        <div class="filter-bar" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Filtres Matières :</span>
+        <div class="filter-bar"
+          style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(255,255,255,0.03); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <span
+            style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Filtres
+            Matières :</span>
 
           <!-- Filtre Niveau -->
           <div style="display:flex; align-items:center; gap:0.35rem;">
-            <label for="matieres-filter-niveau" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Niveau :</label>
+            <label for="matieres-filter-niveau"
+              style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Niveau :</label>
             <select id="matieres-filter-niveau" class="filter-select" onchange="filtrerMatieres()">
               <option value="">Tous les niveaux</option>
               <option value="L1">Licence 1 (L1)</option>
@@ -285,7 +297,8 @@
 
           <!-- Filtre Section / Filière -->
           <div style="display:flex; align-items:center; gap:0.35rem;">
-            <label for="matieres-filter-section" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Section :</label>
+            <label for="matieres-filter-section"
+              style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Section :</label>
             <select id="matieres-filter-section" class="filter-select" onchange="filtrerMatieres()">
               <option value="">Toutes les sections</option>
               <option value="INFO">💻 Informatique (GLSI)</option>
@@ -302,7 +315,8 @@
 
           <!-- Filtre Semestre -->
           <div style="display:flex; align-items:center; gap:0.35rem;">
-            <label for="matieres-filter-semestre" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Semestre :</label>
+            <label for="matieres-filter-semestre"
+              style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Semestre :</label>
             <select id="matieres-filter-semestre" class="filter-select" onchange="filtrerMatieres()">
               <option value="">Tous les semestres</option>
               <option value="1">Semestre 1</option>
@@ -312,13 +326,15 @@
 
           <!-- Recherche textuelle -->
           <div style="flex: 1; min-width: 180px;">
-            <input type="text" id="matieres-search" class="search-box" style="width: 100%;" placeholder="🔍 Rechercher matière, code, enseignant..." oninput="filtrerMatieres()">
+            <input type="text" id="matieres-search" class="search-box" style="width: 100%;"
+              placeholder="🔍 Rechercher matière, code, enseignant..." oninput="filtrerMatieres()">
           </div>
 
           <span id="matieres-count-badge" class="badge badge-gray" style="font-size:0.75rem;">552 Matières</span>
 
           <!-- Bouton Réinitialiser -->
-          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresMatieres()" title="Réinitialiser tous les filtres">
+          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresMatieres()"
+            title="Réinitialiser tous les filtres">
             ↺ Réinitialiser
           </button>
         </div>
@@ -356,7 +372,8 @@
 
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <!-- Bascule des 3 modes de saisie -->
-            <button id="btn-mode-classe-matiere" class="btn btn-primary btn-sm" onclick="basculerModeNotes('classe-matiere')">
+            <button id="btn-mode-classe-matiere" class="btn btn-primary btn-sm"
+              onclick="basculerModeNotes('classe-matiere')">
               🏫 Saisie par Classe & Matière
             </button>
             <button id="btn-mode-grille" class="btn btn-secondary btn-sm" onclick="basculerModeNotes('grille')">
@@ -377,7 +394,8 @@
         <div id="notes-view-classe-matiere" style="margin-top:0.75rem;">
           <!-- Étape 1 : Choisir la Classe -->
           <div class="workflow-step-box" style="margin-bottom:1rem;">
-            <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; margin-bottom:0.6rem; letter-spacing:0.05em;">
+            <div
+              style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; margin-bottom:0.6rem; letter-spacing:0.05em;">
               1. Sélectionner la Promotion / Classe :
             </div>
             <div id="workflow-classe-pills" style="display:flex; gap:0.65rem; flex-wrap:wrap;">
@@ -387,15 +405,18 @@
 
           <!-- Étape 2 : Choisir la Matière (Filtrée selon Enseignant / Admin) -->
           <div class="workflow-step-box" style="margin-bottom:1.25rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
-              <div style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em;">
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; flex-wrap:wrap; gap:0.5rem;">
+              <div
+                style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em;">
                 2. Sélectionner la Matière à Évaluer :
               </div>
               <div id="workflow-teacher-note" style="font-size:0.78rem; color:var(--text-muted);">
                 <!-- Information sur l'assignation -->
               </div>
             </div>
-            <div id="workflow-matieres-cards" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:0.75rem;">
+            <div id="workflow-matieres-cards"
+              style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:0.75rem;">
               <!-- Rempli dynamiquement -->
             </div>
           </div>
@@ -408,7 +429,8 @@
 
         <!-- BARRE DE FILTRAGE MULTI-CRITÈRES (Pour vue Journal et Grille) -->
         <div id="notes-filter-bar-container" class="filter-bar" style="display:none;">
-          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Filtres :</span>
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Filtres
+            :</span>
 
           <!-- Filtre Classe -->
           <select id="notes-filter-classe" class="filter-select" onchange="appliquerFiltresNotes()">
@@ -444,9 +466,11 @@
           </select>
 
           <!-- Recherche Étudiant -->
-          <input type="text" id="notes-filter-search" class="search-box" style="flex:1; min-width:180px;" placeholder="Filtrer par nom d'étudiant..." oninput="appliquerFiltresNotes()">
+          <input type="text" id="notes-filter-search" class="search-box" style="flex:1; min-width:180px;"
+            placeholder="Filtrer par nom d'étudiant..." oninput="appliquerFiltresNotes()">
 
-          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresNotes()" title="Réinitialiser les filtres">
+          <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresNotes()"
+            title="Réinitialiser les filtres">
             ✕ Réinitialiser
           </button>
         </div>
@@ -455,23 +479,22 @@
              VUE B : FEUILLE DE SAISIE INTERACTIVE PAR ÉTUDIANT (PLAN D'ÉTUDES)
              ============================================================ -->
         <div id="notes-view-grille" style="display:none;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; background:rgba(255,255,255,0.02); padding:0.85rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border-card);">
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; background:rgba(255,255,255,0.02); padding:0.85rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border-card);">
             <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap; flex:1;">
               <!-- Recherche rapide par ID ou Nom -->
-              <input type="text" 
-                     id="grille-quick-student-id" 
-                     class="search-box" 
-                     style="min-width:270px;" 
-                     placeholder="🔍 N° Étudiant (ex: ETU-2026-001) ou Nom..." 
-                     oninput="rechercherEtudiantParId(this.value)">
+              <input type="text" id="grille-quick-student-id" class="search-box" style="min-width:270px;"
+                placeholder="🔍 N° Étudiant (ex: ETU-2026-001) ou Nom..." oninput="rechercherEtudiantParId(this.value)">
 
               <!-- Filtre Promotion pour la Grille -->
-              <select id="notes-grille-classe-select" class="filter-select" style="min-width:180px; font-weight:600;" onchange="filtrerEtudiantsGrilleParClasse(this.value)">
+              <select id="notes-grille-classe-select" class="filter-select" style="min-width:180px; font-weight:600;"
+                onchange="filtrerEtudiantsGrilleParClasse(this.value)">
                 <option value="">Toutes les promotions</option>
               </select>
 
               <span style="font-size:0.85rem; font-weight:700; color:white;">Étudiant :</span>
-              <select id="notes-grille-student-select" class="filter-select" style="min-width:240px; font-weight:600;" onchange="chargerGrilleNotesEtudiant(this.value)">
+              <select id="notes-grille-student-select" class="filter-select" style="min-width:240px; font-weight:600;"
+                onchange="chargerGrilleNotesEtudiant(this.value)">
                 <!-- Rempli dynamiquement -->
               </select>
             </div>
@@ -536,21 +559,25 @@
             <p>Interrogation du Service Web SOAP et Documentation OpenAPI</p>
           </div>
           <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <button class="btn btn-primary btn-sm" onclick="reinitialiserBaseMongo()" title="Peupler MongoDB avec le jeu complet">🌱 Peupler MongoDB (Seed)</button>
+            <button class="btn btn-primary btn-sm" onclick="reinitialiserBaseMongo()"
+              title="Peupler MongoDB avec le jeu complet">🌱 Peupler MongoDB (Seed)</button>
             <a href="/api-docs" target="_blank" class="btn btn-secondary btn-sm">📖 Swagger OpenAPI</a>
             <a href="/soap?wsdl" target="_blank" class="btn btn-secondary btn-sm">📜 Contrat WSDL</a>
-            <a href="/api/v1/export/postman" download="Scolarite_LMD_Postman_Collection.json" class="btn btn-secondary btn-sm">📥 Collection Postman</a>
+            <a href="/api/v1/export/postman" download="Scolarite_LMD_Postman_Collection.json"
+              class="btn btn-secondary btn-sm">📥 Collection Postman</a>
           </div>
         </div>
 
         <!-- Statut MongoDB -->
-        <div id="mongo-status-card" style="margin-top:1rem; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div id="mongo-status-card"
+          style="margin-top:1rem; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
           <div style="display:flex; align-items:center; gap:0.85rem;">
             <div style="font-size:1.6rem;">🍃</div>
             <div>
               <div style="font-weight:700; color:#34d399; font-size:0.92rem;">Serveur MongoDB Local Actif</div>
               <div id="mongo-status-text" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;">
-                Base : <strong style="color:white;">scolarite_lmd</strong> sur <strong style="color:white;">mongodb://127.0.0.1:27017/scolarite_lmd</strong>
+                Base : <strong style="color:white;">scolarite_lmd</strong> sur <strong
+                  style="color:white;">mongodb://127.0.0.1:27017/scolarite_lmd</strong>
               </div>
             </div>
           </div>
@@ -564,9 +591,10 @@
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-top:1rem;">
-          <div style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
+          <div
+            style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
             <h4 style="color:white; margin-bottom:1rem; font-size:0.9rem;">Testeur de Requête SOAP</h4>
-            
+
             <div class="form-field">
               <label class="form-label">Opération :</label>
               <select id="soap-operation-select" class="form-control">
@@ -587,14 +615,18 @@
             </div>
 
             <div style="margin-top:1rem;">
-              <div id="soap-request-xml" style="font-family:var(--font-mono); font-size:0.75rem; color:#38bdf8; background:#040711; padding:0.75rem; border-radius:4px; max-height:160px; overflow-y:auto; white-space:pre-wrap;"></div>
+              <div id="soap-request-xml"
+                style="font-family:var(--font-mono); font-size:0.75rem; color:#38bdf8; background:#040711; padding:0.75rem; border-radius:4px; max-height:160px; overflow-y:auto; white-space:pre-wrap;">
+              </div>
             </div>
           </div>
 
-          <div style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
+          <div
+            style="background:#090d16; border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1.25rem;">
             <h4 style="color:white; margin-bottom:1rem; font-size:0.9rem;">Réponse XML du Serveur SOAP :</h4>
-            <div id="soap-response-xml" style="font-family:var(--font-mono); font-size:0.75rem; color:#34d399; background:#040711; padding:0.75rem; border-radius:4px; height:320px; overflow-y:auto; white-space:pre-wrap;">
-&lt;!-- La réponse XML apparaîtra ici après l'envoi --&gt;
+            <div id="soap-response-xml"
+              style="font-family:var(--font-mono); font-size:0.75rem; color:#34d399; background:#040711; padding:0.75rem; border-radius:4px; height:320px; overflow-y:auto; white-space:pre-wrap;">
+              &lt;!-- La réponse XML apparaîtra ici après l'envoi --&gt;
             </div>
           </div>
         </div>
@@ -607,7 +639,8 @@
         <div class="panel-header" style="flex-wrap:wrap; gap:1rem;">
           <div>
             <h2>📑 Plans d'Études Officiels de l'ISSAT de Sousse</h2>
-            <p>Référentiel universitaire complet : 31 Filières & Spécialités, 504 Matières avec Crédits ECTS, Coefficients, Régimes et Formules de calcul</p>
+            <p>Référentiel universitaire complet : 31 Filières & Spécialités, 504 Matières avec Crédits ECTS,
+              Coefficients, Régimes et Formules de calcul</p>
           </div>
           <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
             <span class="badge badge-admis" id="badge-total-plans-count">31 Plans Officiels</span>
@@ -616,10 +649,12 @@
         </div>
 
         <!-- Filtres interactifs par Département & Niveau -->
-        <div style="background:var(--bg-card); border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+        <div
+          style="background:var(--bg-card); border:1px solid var(--border-card); border-radius:var(--radius-md); padding:1rem 1.25rem; margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center; justify-content:space-between;">
           <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
             <label style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Département :</label>
-            <select id="filter-plan-dept" class="form-control" style="width:auto; min-width:210px; font-size:0.85rem;" onchange="filtrerPlansEtudes()">
+            <select id="filter-plan-dept" class="form-control" style="width:auto; min-width:210px; font-size:0.85rem;"
+              onchange="filtrerPlansEtudes()">
               <option value="">Tous les départements (7)</option>
               <option value="Sciences de l'Informatique">💻 Informatique (GLSI)</option>
               <option value="Ingénierie des Systèmes Informatiques">🤖 Systèmes Embarqués & IoT (SISE)</option>
@@ -630,8 +665,10 @@
               <option value="Génie Energétique">❄️ Génie Énergétique (Froid & Climatisation)</option>
             </select>
 
-            <label style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-left:0.5rem;">Niveau :</label>
-            <select id="filter-plan-annee" class="form-control" style="width:auto; min-width:140px; font-size:0.85rem;" onchange="filtrerPlansEtudes()">
+            <label style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-left:0.5rem;">Niveau
+              :</label>
+            <select id="filter-plan-annee" class="form-control" style="width:auto; min-width:140px; font-size:0.85rem;"
+              onchange="filtrerPlansEtudes()">
               <option value="">Toutes les années</option>
               <option value="1ere">1ère Année (L1)</option>
               <option value="2eme">2ème Année (L2)</option>
@@ -640,12 +677,15 @@
           </div>
 
           <div style="min-width:260px; flex:1; max-width:380px;">
-            <input type="text" id="filter-plan-search" class="form-control" placeholder="🔍 Rechercher matière, code, spécialité..." oninput="filtrerPlansEtudes()" style="font-size:0.85rem;" />
+            <input type="text" id="filter-plan-search" class="form-control"
+              placeholder="🔍 Rechercher matière, code, spécialité..." oninput="filtrerPlansEtudes()"
+              style="font-size:0.85rem;" />
           </div>
         </div>
 
         <!-- Conteneur des cartes de plans d'études -->
-        <div id="container-plans-etudes-list" style="margin-top:1.5rem; display:flex; flex-direction:column; gap:1.25rem;">
+        <div id="container-plans-etudes-list"
+          style="margin-top:1.5rem; display:flex; flex-direction:column; gap:1.25rem;">
           <div style="text-align:center; padding:2rem; color:var(--text-muted);">
             Chargement des plans d'études officiels...
           </div>
@@ -694,7 +734,8 @@
             </div>
             <div class="form-field">
               <label class="form-label">Email Universitaire :</label>
-              <input type="email" id="form-etudiant-email" class="form-control" required placeholder="prenom.nom@myuniversity.tn">
+              <input type="email" id="form-etudiant-email" class="form-control" required
+                placeholder="prenom.nom@myuniversity.tn">
             </div>
           </div>
         </div>
@@ -719,11 +760,13 @@
           <div class="form-grid-2">
             <div class="form-field">
               <label class="form-label">Code :</label>
-              <input type="text" id="form-mat-code" class="form-control" required placeholder="Ex: ALGO301" style="text-transform:uppercase;">
+              <input type="text" id="form-mat-code" class="form-control" required placeholder="Ex: ALGO301"
+                style="text-transform:uppercase;">
             </div>
             <div class="form-field">
               <label class="form-label">Intitulé :</label>
-              <input type="text" id="form-mat-intitule" class="form-control" required placeholder="Ex: Algorithmique Avancée">
+              <input type="text" id="form-mat-intitule" class="form-control" required
+                placeholder="Ex: Algorithmique Avancée">
             </div>
           </div>
 
@@ -812,10 +855,15 @@
 
             <div class="form-field">
               <label class="form-label">Note sur 20 :</label>
-              <input type="number" id="form-note-valeur" class="form-control" min="0" max="20" step="0.25" required placeholder="Ex: 14.5">
+              <input type="number" id="form-note-valeur" class="form-control" min="0" max="20" step="0.25" required
+                placeholder="Ex: 14.5">
               <div style="display:flex; gap:0.4rem; margin-top:0.4rem;">
-                <button type="button" class="btn-quick-tag abs" onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour absence">Absent (0)</button>
-                <button type="button" class="btn-quick-tag fraude" onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour fraude">Fraude / 8ach (0)</button>
+                <button type="button" class="btn-quick-tag abs"
+                  onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour absence">Absent
+                  (0)</button>
+                <button type="button" class="btn-quick-tag fraude"
+                  onclick="document.getElementById('form-note-valeur').value='0'" title="Mettre 0 pour fraude">Fraude /
+                  8ach (0)</button>
               </div>
             </div>
           </div>
@@ -854,11 +902,13 @@
 
           <div class="form-field">
             <label class="form-label">Explication détaillée de l'erreur constatée :</label>
-            <textarea id="form-rec-motif" class="form-control" rows="4" required placeholder="Expliquez clairement le problème constaté sur votre copie..."></textarea>
+            <textarea id="form-rec-motif" class="form-control" rows="4" required
+              placeholder="Expliquez clairement le problème constaté sur votre copie..."></textarea>
           </div>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-depot-reclamation')">Annuler</button>
+          <button type="button" class="btn btn-secondary"
+            onclick="fermerModal('modal-depot-reclamation')">Annuler</button>
           <button type="submit" class="btn btn-primary">Envoyer la Demande</button>
         </div>
       </form>
@@ -875,7 +925,8 @@
       <form id="form-traiter-rec">
         <input type="hidden" id="form-traiter-rec-id">
         <div class="modal-body">
-          <div style="background:rgba(255,255,255,0.03); padding:0.85rem; border-radius:6px; margin-bottom:1rem; font-size:0.82rem;">
+          <div
+            style="background:rgba(255,255,255,0.03); padding:0.85rem; border-radius:6px; margin-bottom:1rem; font-size:0.82rem;">
             <div><strong>Étudiant :</strong> <span id="traiter-rec-etudiant"></span></div>
             <div><strong>Matière :</strong> <span id="traiter-rec-matiere"></span></div>
             <div><strong>Note actuelle :</strong> <span id="traiter-rec-note-actuelle"></span></div>
@@ -895,17 +946,20 @@
 
             <div class="form-field">
               <label class="form-label">Nouvelle Note (/20) :</label>
-              <input type="number" id="form-traiter-rec-rectification" class="form-control" min="0" max="20" step="0.25" placeholder="Ex: 14.0">
+              <input type="number" id="form-traiter-rec-rectification" class="form-control" min="0" max="20" step="0.25"
+                placeholder="Ex: 14.0">
             </div>
           </div>
 
           <div class="form-field">
             <label class="form-label">Commentaire pour l'étudiant :</label>
-            <textarea id="form-traiter-rec-reponse" class="form-control" rows="3" placeholder="Justifiez votre décision..."></textarea>
+            <textarea id="form-traiter-rec-reponse" class="form-control" rows="3"
+              placeholder="Justifiez votre décision..."></textarea>
           </div>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn btn-secondary" onclick="fermerModal('modal-traiter-reclamation')">Annuler</button>
+          <button type="button" class="btn btn-secondary"
+            onclick="fermerModal('modal-traiter-reclamation')">Annuler</button>
           <button type="submit" class="btn btn-primary">Enregistrer la Décision</button>
         </div>
       </form>
@@ -947,4 +1001,5 @@
   <!-- Script Principal -->
   <script src="/js/app.js"></script>
 </body>
+
 </html>
