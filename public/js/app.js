@@ -39,7 +39,9 @@ const state = {
     search: ''
   },
   selectedGrilleStudentId: null,
-  grilleSemestreVue: 'ANNUEL' // ANNUEL, S1, S2
+  grilleSemestreVue: 'ANNUEL', // ANNUEL, S1, S2
+  plansEtudes: [],
+  filteredPlans: []
 };
 
 // ============================================================
@@ -134,6 +136,11 @@ function adapterInterfaceSelonProfil(role) {
     etudiantTabs.forEach(el => el.style.display = 'none');
     switchTab('etudiants');
   }
+
+  // L'onglet des plans d'études officiels est consultable par tous les profils (Scolarité, Enseignants, Étudiants)
+  document.querySelectorAll('.tab-btn[data-tab="plans-etudes"]').forEach(el => {
+    el.style.display = 'inline-flex';
+  });
 }
 
 async function traiterConnexion(e) {
@@ -221,7 +228,8 @@ async function refreshDonnees() {
     fetchMatieres(),
     fetchNotes(),
     fetchReclamations(),
-    fetchStats()
+    fetchStats(),
+    fetchPlansEtudes()
   ]);
   renderView();
 }
@@ -291,6 +299,7 @@ function renderView() {
   if (state.currentTab === 'notes') renderNotesTab();
   if (state.currentTab === 'deliberations') renderDeliberationsTab();
   if (state.currentTab === 'services-tech') renderServicesTechTab();
+  if (state.currentTab === 'plans-etudes') renderPlansEtudesTab();
 }
 
 // ------------------------------------------------------------
@@ -3626,6 +3635,200 @@ async function telechargerExportCSV() {
   } catch (err) {
     showToast('Erreur téléchargement : ' + err.message, 'error');
   }
+}
+
+// ============================================================
+// 9. BIS. CATALOGUE DES PLANS D'ETUDES OFFICIELS ISSAT (31 Plans / 504 Matières)
+// ============================================================
+async function fetchPlansEtudes() {
+  try {
+    const res = await apiFetch('/plans-etudes');
+    if (res.success && res.data) {
+      state.plansEtudes = res.data;
+      state.filteredPlans = [...res.data];
+      
+      const badgePlans = document.getElementById('badge-total-plans-count');
+      const badgeMat = document.getElementById('badge-total-matieres-count');
+      if (badgePlans) badgePlans.textContent = `${res.totalPlans || res.data.length} Plans Officiels`;
+      if (badgeMat) badgeMat.textContent = `${res.totalMatieres || 504} Matières Répertoriées`;
+    }
+  } catch (err) {
+    console.error('Erreur chargement plans d\'études :', err);
+  }
+}
+
+function filtrerPlansEtudes() {
+  const dept = (document.getElementById('filter-plan-dept')?.value || '').toLowerCase();
+  const annee = (document.getElementById('filter-plan-annee')?.value || '').toLowerCase();
+  const search = (document.getElementById('filter-plan-search')?.value || '').toLowerCase();
+
+  state.filteredPlans = state.plansEtudes.filter(p => {
+    if (dept && (!p.departement || !p.departement.toLowerCase().includes(dept))) return false;
+    if (annee && (!p.annee || p.annee.toLowerCase() !== annee)) return false;
+    if (search) {
+      const matchHeader = (p.filiere && p.filiere.toLowerCase().includes(search)) ||
+                          (p.specialite && p.specialite.toLowerCase().includes(search)) ||
+                          (p.departement && p.departement.toLowerCase().includes(search));
+      const matchMatiere = p.matieres.some(m => 
+        (m.intitule && m.intitule.toLowerCase().includes(search)) ||
+        (m.code && m.code.toLowerCase().includes(search)) ||
+        (m.uniteEnseignement && m.uniteEnseignement.toLowerCase().includes(search))
+      );
+      if (!matchHeader && !matchMatiere) return false;
+    }
+    return true;
+  });
+
+  renderPlansEtudesTab();
+}
+
+function togglePlanDetails(keyId) {
+  const bodyEl = document.getElementById(`plan-body-${keyId}`);
+  const arrowEl = document.getElementById(`plan-arrow-${keyId}`);
+  if (!bodyEl) return;
+  const isHidden = bodyEl.style.display === 'none';
+  bodyEl.style.display = isHidden ? 'block' : 'none';
+  if (arrowEl) arrowEl.textContent = isHidden ? '▲ Réduire' : '▼ Voir les matières';
+}
+
+function renderPlansEtudesTab() {
+  const container = document.getElementById('container-plans-etudes-list');
+  if (!container) return;
+
+  if (!state.filteredPlans || state.filteredPlans.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:3rem; background:var(--bg-card); border-radius:var(--radius-md); border:1px dashed var(--border-card);">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">🔍</div>
+        <div style="color:white; font-weight:600;">Aucun plan d'études ne correspond à vos filtres</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Essayez de réinitialiser la recherche ou de sélectionner un autre département.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const deptIcons = {
+    "Sciences de l'Informatique": '💻',
+    "Ingénierie des Systèmes Informatiques": '🤖',
+    "EEA": '⚡',
+    "Electromécanique": '⚙️',
+    "Génie Civil": '🏗️',
+    "Génie Mécanique": '🔩',
+    "Génie Energétique": '❄️'
+  };
+
+  const anneeLabels = {
+    '1ere': '1ère Année (L1)',
+    '2eme': '2ème Année (L2)',
+    '3eme': '3ème Année (L3)'
+  };
+
+  container.innerHTML = state.filteredPlans.map(plan => {
+    const icon = deptIcons[plan.departement] || '📚';
+    const anneeLabel = anneeLabels[plan.annee] || plan.annee;
+    const cleanId = plan.key.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const totalCredits = plan.matieres.reduce((s, m) => s + (m.credits || 0), 0);
+    const totalCoef = plan.matieres.reduce((s, m) => s + (m.coefficient || 0), 0);
+
+    const s1Matieres = plan.matieres.filter(m => m.semestre % 2 === 1);
+    const s2Matieres = plan.matieres.filter(m => m.semestre % 2 === 0);
+
+    const renderMatieresTable = (mats, semLabel) => {
+      if (!mats || mats.length === 0) return '';
+      return `
+        <div style="margin-top:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <h5 style="color:#38bdf8; font-size:0.88rem; font-weight:700;">📌 ${semLabel} (${mats.length} Matières)</h5>
+            <span style="font-size:0.75rem; color:var(--text-muted);">
+              Total Semestre : <strong>${mats.reduce((s,m)=>s+m.credits, 0)} ECTS</strong> | Coef <strong>${mats.reduce((s,m)=>s+m.coefficient, 0)}</strong>
+            </span>
+          </div>
+          <div class="table-responsive" style="border:1px solid var(--border-card); border-radius:var(--radius-sm); overflow:hidden;">
+            <table class="table" style="font-size:0.8rem; margin:0;">
+              <thead>
+                <tr style="background:#090d16;">
+                  <th style="width:75px;">Code</th>
+                  <th>Matière & Unité d'Enseignement (UE)</th>
+                  <th style="text-align:center; width:65px;">Cours</th>
+                  <th style="text-align:center; width:65px;">TD</th>
+                  <th style="text-align:center; width:65px;">TP</th>
+                  <th style="text-align:center; width:70px;">Crédits</th>
+                  <th style="text-align:center; width:65px;">Coef</th>
+                  <th style="text-align:center; width:75px;">Régime</th>
+                  <th style="width:140px;">Formule de Calcul</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${mats.map(m => `
+                  <tr>
+                    <td><span class="badge badge-code" style="font-size:0.72rem;">${m.code}</span></td>
+                    <td>
+                      <div style="font-weight:600; color:white;">${m.intitule}</div>
+                      <div style="font-size:0.7rem; color:var(--text-muted);">${m.uniteEnseignement || 'UE Générale'}</div>
+                    </td>
+                    <td style="text-align:center; color:var(--text-muted);">${m.hc !== undefined ? m.hc.toFixed(2) : '-'}</td>
+                    <td style="text-align:center; color:var(--text-muted);">${m.htd !== undefined ? m.htd.toFixed(2) : '-'}</td>
+                    <td style="text-align:center; color:var(--text-muted);">${m.htp !== undefined ? m.htp.toFixed(2) : '-'}</td>
+                    <td style="text-align:center; font-weight:600; color:#38bdf8;">${m.credits}</td>
+                    <td style="text-align:center; font-weight:600; color:#f59e0b;">${m.coefficient}</td>
+                    <td style="text-align:center;">
+                      <span class="badge ${m.regime === 'CC' ? 'badge-primary' : (m.regime === 'SOUT' ? 'badge-admis' : 'badge-gray')}" style="font-size:0.68rem;">
+                        ${m.regime}
+                      </span>
+                    </td>
+                    <td>
+                      <code style="font-size:0.72rem; color:#34d399; background:rgba(52,211,153,0.08); padding:0.15rem 0.35rem; border-radius:3px;">
+                        ${m.formule || '(3DS+7EX)/10'}
+                      </code>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    };
+
+    return `
+      <div style="background:var(--bg-card); border:1px solid var(--border-card); border-radius:var(--radius-md); overflow:hidden; transition:border-color 0.2s;">
+        <!-- Entête de la fiche plan -->
+        <div style="padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; cursor:pointer; background:#0b101c;" onclick="togglePlanDetails('${cleanId}')">
+          <div style="display:flex; align-items:center; gap:0.85rem;">
+            <div style="font-size:1.75rem;">${icon}</div>
+            <div>
+              <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <span class="badge badge-primary" style="font-size:0.75rem;">${plan.departement}</span>
+                <span class="badge badge-gray" style="font-size:0.75rem;">${anneeLabel}</span>
+                <span class="badge badge-code" style="font-size:0.72rem;">${plan.specialite}</span>
+              </div>
+              <h3 style="color:white; font-size:1rem; font-weight:700; margin-top:0.35rem;">
+                ${plan.filiere}
+              </h3>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.15rem;">
+                Document Source : <code style="color:#94a3b8;">${plan.file}</code> • <strong>${plan.count} Matières</strong> au total
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:1rem;">
+            <div style="text-align:right;">
+              <div style="font-size:0.85rem; font-weight:700; color:#38bdf8;">${totalCredits} ECTS</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Coef Total : ${totalCoef}</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="plan-arrow-${cleanId}" style="pointer-events:none;">
+              ▼ Voir les matières
+            </button>
+          </div>
+        </div>
+
+        <!-- Corps détaillé avec les matières du plan (Accordéon) -->
+        <div id="plan-body-${cleanId}" style="display:none; padding:1.25rem; background:rgba(0,0,0,0.2); border-top:1px solid var(--border-card);">
+          ${s1Matieres.length > 0 ? renderMatieresTable(s1Matieres, `Semestre Impair (${plan.annee === '1ere' ? 'S1' : (plan.annee === '2eme' ? 'S3' : 'S5')})`) : ''}
+          ${s2Matieres.length > 0 ? renderMatieresTable(s2Matieres, `Semestre Pair (${plan.annee === '1ere' ? 'S2' : (plan.annee === '2eme' ? 'S4' : 'S6')})`) : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ============================================================

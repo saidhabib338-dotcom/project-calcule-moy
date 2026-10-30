@@ -416,6 +416,46 @@ async function handleRestRoutes(req, res, pathname, query, body) {
   }
 
   // ----------------------------------------------------
+  // CATALOGUE DES PLANS D'ETUDES OFFICIELS ISSAT (31 Plans / 504 Matières)
+  // ----------------------------------------------------
+  if (pathname === '/api/v1/plans-etudes' && req.method === 'GET') {
+    const plansPath = path.join(__dirname, '../data/plans_etude_issat_complets.json');
+    if (!fs.existsSync(plansPath)) {
+      return sendJson(404, { success: false, error: 'Catalogue des plans d\'études non disponible' });
+    }
+    const plansData = JSON.parse(fs.readFileSync(plansPath, 'utf8'));
+    const { departement, annee, specialite, recherche } = query;
+    let list = Object.entries(plansData).map(([key, val]) => ({ key, ...val }));
+
+    if (departement) {
+      list = list.filter(p => p.departement && p.departement.toLowerCase().includes(departement.toLowerCase()));
+    }
+    if (annee) {
+      list = list.filter(p => p.annee && p.annee.toLowerCase() === annee.toLowerCase());
+    }
+    if (specialite) {
+      list = list.filter(p => p.specialite && p.specialite.toLowerCase().includes(specialite.toLowerCase()));
+    }
+    if (recherche) {
+      const q = recherche.toLowerCase();
+      list = list.filter(p =>
+        (p.filiere && p.filiere.toLowerCase().includes(q)) ||
+        (p.specialite && p.specialite.toLowerCase().includes(q)) ||
+        (p.departement && p.departement.toLowerCase().includes(q)) ||
+        p.matieres.some(m => m.intitule.toLowerCase().includes(q) || m.code.toLowerCase().includes(q))
+      );
+    }
+
+    const totalMatieres = list.reduce((sum, p) => sum + p.count, 0);
+    return sendJson(200, {
+      success: true,
+      totalPlans: list.length,
+      totalMatieres: totalMatieres,
+      data: list
+    });
+  }
+
+  // ----------------------------------------------------
   // 4. NOTES & SAISIE CONTRÔLÉE
   // ----------------------------------------------------
   if (pathname === '/api/v1/notes' && req.method === 'GET') {
