@@ -208,18 +208,20 @@
           </div>
 
           <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-            <input type="text" id="global-search" class="search-box" placeholder="Rechercher par nom, prénom...">
+            <input type="text" id="global-search" class="search-box" style="min-width:220px;" placeholder="🔍 Rechercher étudiant, matricule, classe, email...">
 
-            <div style="display:flex; gap:0.3rem; flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm filter-class-btn active" data-class="">Toutes</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L1-INFO" title="Licence 1 Informatique">L1-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L2-INFO" title="Licence 2 Informatique">L2-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="L3-INFO" title="Licence 3 Informatique">L3-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="ING1-INFO" title="Cycle Ingénieur Informatique 1">ING1-INFO</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="ING2-GL" title="Cycle Ingénieur Génie Logiciel">ING2-GL</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-GL" title="Mastère Pro Génie Logiciel">M1-GL</button>
-              <button class="btn btn-secondary btn-sm filter-class-btn" data-class="M1-SPI" title="Mastère Recherche Systèmes Pervasifs & IoT">M1-SPI</button>
-            </div>
+            <!-- Filtre Cycle -->
+            <select id="etudiants-filter-cycle" class="filter-select" onchange="filtrerEtudiantsParCycle(this.value)">
+              <option value="ALL">Tous les cycles</option>
+              <option value="LICENCE">🎓 Licences LMD</option>
+              <option value="INGENIEUR">⚙️ Cycles d'Ingénieurs</option>
+              <option value="MASTER">🔬 Mastères</option>
+            </select>
+
+            <!-- Filtre Promotion (Classe dynamique) -->
+            <select id="etudiants-filter-classe" class="filter-select" style="min-width:180px;" onchange="filtrerEtudiantsParClasse(this.value)">
+              <option value="">Toutes les promotions</option>
+            </select>
 
             <button class="btn btn-primary btn-sm role-tab-admin" onclick="ouvrirAjouterEtudiantModal()">
               + Inscrire un Étudiant
@@ -286,18 +288,34 @@
             <label for="matieres-filter-section" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Section :</label>
             <select id="matieres-filter-section" class="filter-select" onchange="filtrerMatieres()">
               <option value="">Toutes les sections</option>
-              <option value="INFO">Informatique (INFO)</option>
-              <option value="GL">Génie Logiciel (GL)</option>
-              <option value="TIC">Technologies TIC (TIC)</option>
-              <option value="DSI">Développement SI (DSI)</option>
-              <option value="IA">Intelligence Artificielle (IA)</option>
+              <option value="INFO">💻 Informatique (GLSI)</option>
+              <option value="SISE">🤖 Systèmes Embarqués & IoT (SISE)</option>
+              <option value="EEA">⚡ EEA (Automatique / Électronique)</option>
+              <option value="GC">🏗️ Génie Civil (Bâtiments / Ponts)</option>
+              <option value="GM">🔩 Génie Mécanique (Conception / Productique)</option>
+              <option value="EMT">⚙️ Électromécanique (Mécatronique)</option>
+              <option value="GEFC">❄️ Génie Énergétique (Froid & Clim)</option>
+              <option value="GL">🚀 Génie Logiciel (ING / M1)</option>
+              <option value="SPI">🔬 Systèmes Pervasifs & Intelligents</option>
+            </select>
+          </div>
+
+          <!-- Filtre Semestre -->
+          <div style="display:flex; align-items:center; gap:0.35rem;">
+            <label for="matieres-filter-semestre" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Semestre :</label>
+            <select id="matieres-filter-semestre" class="filter-select" onchange="filtrerMatieres()">
+              <option value="">Tous les semestres</option>
+              <option value="1">Semestre 1</option>
+              <option value="2">Semestre 2</option>
             </select>
           </div>
 
           <!-- Recherche textuelle -->
           <div style="flex: 1; min-width: 180px;">
-            <input type="text" id="matieres-search" class="search-box" style="width: 100%;" placeholder="Rechercher matière ou code..." oninput="filtrerMatieres()">
+            <input type="text" id="matieres-search" class="search-box" style="width: 100%;" placeholder="🔍 Rechercher matière, code, enseignant..." oninput="filtrerMatieres()">
           </div>
+
+          <span id="matieres-count-badge" class="badge badge-gray" style="font-size:0.75rem;">552 Matières</span>
 
           <!-- Bouton Réinitialiser -->
           <button class="btn btn-secondary btn-sm" onclick="reinitialiserFiltresMatieres()" title="Réinitialiser tous les filtres">
@@ -447,7 +465,12 @@
                      placeholder="🔍 N° Étudiant (ex: ETU-2026-001) ou Nom..." 
                      oninput="rechercherEtudiantParId(this.value)">
 
-              <span style="font-size:0.85rem; font-weight:700; color:white;">ou sélectionner :</span>
+              <!-- Filtre Promotion pour la Grille -->
+              <select id="notes-grille-classe-select" class="filter-select" style="min-width:180px; font-weight:600;" onchange="filtrerEtudiantsGrilleParClasse(this.value)">
+                <option value="">Toutes les promotions</option>
+              </select>
+
+              <span style="font-size:0.85rem; font-weight:700; color:white;">Étudiant :</span>
               <select id="notes-grille-student-select" class="filter-select" style="min-width:240px; font-weight:600;" onchange="chargerGrilleNotesEtudiant(this.value)">
                 <!-- Rempli dynamiquement -->
               </select>

@@ -12,6 +12,7 @@ const state = {
   notes: [],
   reclamations: [],
   stats: null,
+  activeCycleFilter: 'ALL',
   activeClassFilter: '',
   searchQuery: '',
   notesMode: 'classe-matiere', // 'classe-matiere' (par classe & matière), 'grille' (par étudiant) ou 'journal'
@@ -28,12 +29,13 @@ const state = {
   matieresFilters: {
     niveau: '',
     section: '',
+    semestre: '',
     search: ''
   },
   delibFilters: {
     cycle: 'ALL',      // ALL, LICENCE, INGENIEUR, MASTER
     niveau: 'ALL',     // ALL, L1, L2, L3, ING1, ING2, M1
-    section: 'ALL',    // ALL, INFO, GL, SPI
+    section: 'ALL',    // ALL, INFO, GL, SPI, etc.
     classe: 'ALL',     // ALL, ou classe spécifique
     semestre: 'ANNUEL',// ANNUEL, S1, S2
     search: ''
@@ -43,6 +45,34 @@ const state = {
   plansEtudes: [],
   filteredPlans: []
 };
+
+// ============================================================
+// FONCTIONS UTILITAIRES DE FILTRAGE UNIVERSEL
+// ============================================================
+function matchSectionHelper(classe, section) {
+  if (!section || section === 'ALL') return true;
+  const cls = (classe || '').toUpperCase();
+  const sec = section.toUpperCase();
+  if (sec === 'GC') return cls.includes('-GC') || cls.includes('-GLB') || cls.startsWith('L1-GCTC');
+  if (sec === 'GM') return cls.includes('-GM');
+  if (sec === 'EMT') return cls.includes('-EMT') || cls.includes('-EMM');
+  if (sec === 'EEA') return cls.includes('-EEA');
+  if (sec === 'SISE') return cls.includes('-SISE');
+  if (sec === 'INFO') return (cls.includes('-INFO') || cls.includes('-GLSI')) && !cls.includes('-GL');
+  if (sec === 'GEFC') return cls.includes('-GEFC');
+  if (sec === 'GL') return cls.includes('-GL') && !cls.includes('-GLB') && !cls.includes('-GLSI');
+  if (sec === 'SPI') return cls.includes('-SPI');
+  return cls.includes(sec);
+}
+
+function matchCycleHelper(classe, cycle) {
+  if (!cycle || cycle === 'ALL') return true;
+  const cls = (classe || '').toUpperCase();
+  if (cycle === 'LICENCE') return cls.startsWith('L1') || cls.startsWith('L2') || cls.startsWith('L3') || cls.startsWith('L-');
+  if (cycle === 'INGENIEUR') return cls.startsWith('ING');
+  if (cycle === 'MASTER') return cls.startsWith('M1') || cls.startsWith('M2') || cls.startsWith('MASTER');
+  return true;
+}
 
 // ============================================================
 // 1. CYCLE DE VIE & CONNEXION
@@ -389,18 +419,19 @@ function renderReclamationsTab() {
 
   // Sélecteur de classe pour Enseignant et Admin
   if (!isEtudiant) {
+    const recClasses = Array.from(new Set(state.reclamations.map(r => r.etudiantClasse).filter(Boolean))).sort();
     html += `
-      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:1.25rem; flex-wrap:wrap; background:rgba(255,255,255,0.02); padding:0.6rem 0.85rem; border-radius:6px; border:1px solid var(--border-card);">
+      <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1.25rem; flex-wrap:wrap; background:rgba(255,255,255,0.02); padding:0.6rem 0.85rem; border-radius:6px; border:1px solid var(--border-card);">
         <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Filtrer par promotion :</span>
-        <button class="btn btn-sm ${!state.reclamationClassFilter ? 'btn-primary' : 'btn-secondary'}" onclick="filtrerReclamationsParClasse('')">
-          Toutes
-        </button>
-        <button class="btn btn-sm ${state.reclamationClassFilter === 'L3-INFO' ? 'btn-primary' : 'btn-secondary'}" onclick="filtrerReclamationsParClasse('L3-INFO')">
-          L3-INFO
-        </button>
-        <button class="btn btn-sm ${state.reclamationClassFilter === 'M1-GL' ? 'btn-primary' : 'btn-secondary'}" onclick="filtrerReclamationsParClasse('M1-GL')">
-          M1-GL
-        </button>
+        <select class="filter-select" style="min-width:180px;" onchange="filtrerReclamationsParClasse(this.value)">
+          <option value="" ${!state.reclamationClassFilter ? 'selected' : ''}>Toutes les promotions (${recClasses.length})</option>
+          ${recClasses.map(c => `<option value="${c}" ${state.reclamationClassFilter === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        ${state.reclamationClassFilter ? `
+          <button class="btn btn-secondary btn-sm" onclick="filtrerReclamationsParClasse('')">
+            ✕ Effacer le filtre
+          </button>
+        ` : ''}
       </div>
     `;
   }
@@ -483,20 +514,50 @@ function filtrerReclamationsParClasse(classe) {
 // ------------------------------------------------------------
 // C. GESTION DES ÉTUDIANTS (SCOLARITÉ)
 // ------------------------------------------------------------
+function filtrerEtudiantsParCycle(cycle) {
+  state.activeCycleFilter = cycle || 'ALL';
+  state.activeClassFilter = '';
+  renderEtudiantsTab();
+}
+
+function filtrerEtudiantsParClasse(classe) {
+  state.activeClassFilter = classe || '';
+  renderEtudiantsTab();
+}
+
 function renderEtudiantsTab() {
   const tbody = document.getElementById('etudiants-table-body');
   if (!tbody) return;
 
+  // Mise à jour dynamique du sélecteur de classes selon le cycle choisi
+  const classeSelect = document.getElementById('etudiants-filter-classe');
+  if (classeSelect) {
+    const cycle = state.activeCycleFilter || 'ALL';
+    const currentVal = state.activeClassFilter || '';
+    let availableClasses = Array.from(new Set(state.etudiants.map(e => e.classe).filter(Boolean)));
+    if (cycle !== 'ALL') {
+      availableClasses = availableClasses.filter(c => matchCycleHelper(c, cycle));
+    }
+    availableClasses.sort();
+    classeSelect.innerHTML = `<option value="">Toutes les promotions (${availableClasses.length})</option>` +
+      availableClasses.map(c => `<option value="${c}" ${c === currentVal ? 'selected' : ''}>${c}</option>`).join('');
+  }
+
   let filtered = state.etudiants;
+  if (state.activeCycleFilter && state.activeCycleFilter !== 'ALL') {
+    filtered = filtered.filter(e => matchCycleHelper(e.classe, state.activeCycleFilter));
+  }
   if (state.activeClassFilter) {
     filtered = filtered.filter(e => e.classe === state.activeClassFilter);
   }
   if (state.searchQuery) {
-    const q = state.searchQuery.toLowerCase();
+    const q = state.searchQuery.toLowerCase().trim();
     filtered = filtered.filter(e =>
-      e.nom.toLowerCase().includes(q) ||
-      e.prenom.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q)
+      (e.nom && e.nom.toLowerCase().includes(q)) ||
+      (e.prenom && e.prenom.toLowerCase().includes(q)) ||
+      (e.numeroEtudiant && e.numeroEtudiant.toLowerCase().includes(q)) ||
+      (e.classe && e.classe.toLowerCase().includes(q)) ||
+      (e.email && e.email.toLowerCase().includes(q))
     );
   }
 
@@ -605,22 +666,25 @@ function ouvrirGrilleNotesDirect(etudiantId) {
 function filtrerMatieres() {
   const niveau = document.getElementById('matieres-filter-niveau')?.value || '';
   const section = document.getElementById('matieres-filter-section')?.value || '';
+  const semestre = document.getElementById('matieres-filter-semestre')?.value || '';
   const search = document.getElementById('matieres-search')?.value.toLowerCase().trim() || '';
 
-  state.matieresFilters = { niveau, section, search };
+  state.matieresFilters = { niveau, section, semestre, search };
   renderMatieresTab();
 }
 
 function reinitialiserFiltresMatieres() {
   const selNiveau = document.getElementById('matieres-filter-niveau');
   const selSection = document.getElementById('matieres-filter-section');
+  const selSemestre = document.getElementById('matieres-filter-semestre');
   const inpSearch = document.getElementById('matieres-search');
 
   if (selNiveau) selNiveau.value = '';
   if (selSection) selSection.value = '';
+  if (selSemestre) selSemestre.value = '';
   if (inpSearch) inpSearch.value = '';
 
-  state.matieresFilters = { niveau: '', section: '', search: '' };
+  state.matieresFilters = { niveau: '', section: '', semestre: '', search: '' };
   renderMatieresTab();
 }
 
@@ -628,29 +692,47 @@ function renderMatieresTab() {
   const tbody = document.getElementById('matieres-table-body');
   if (!tbody) return;
 
-  const { niveau, section, search } = state.matieresFilters || {};
+  const { niveau, section, semestre, search } = state.matieresFilters || {};
 
   const filtered = (state.matieres || []).filter(m => {
-    const parts = (m.classe || '').split('-');
+    const cls = m.classe || '';
+    const parts = cls.split('-');
     const mNiveau = parts[0] || '';
-    const mSection = parts[1] || '';
 
-    if (niveau && mNiveau !== niveau) return false;
-    if (section && mSection !== section) return false;
+    // Filtre Niveau
+    if (niveau && !mNiveau.startsWith(niveau)) return false;
+
+    // Filtre Section
+    if (section && !matchSectionHelper(cls, section)) return false;
+
+    // Filtre Semestre
+    if (semestre) {
+      const s = String(m.semestre || '');
+      if (semestre === '1' && !['1', 'S1', 'S3', 'S5'].includes(s)) return false;
+      if (semestre === '2' && !['2', 'S2', 'S4', 'S6'].includes(s)) return false;
+    }
+
+    // Filtre Recherche
     if (search) {
       const matchCode = (m.code || '').toLowerCase().includes(search);
       const matchIntitule = (m.intitule || '').toLowerCase().includes(search);
       const matchEnseignant = (m.enseignant || '').toLowerCase().includes(search);
-      const matchClasse = (m.classe || '').toLowerCase().includes(search);
-      if (!matchCode && !matchIntitule && !matchEnseignant && !matchClasse) return false;
+      const matchClasse = cls.toLowerCase().includes(search);
+      const matchUE = (m.uniteEnseignement || '').toLowerCase().includes(search);
+      if (!matchCode && !matchIntitule && !matchEnseignant && !matchClasse && !matchUE) return false;
     }
     return true;
   });
 
+  const countBadge = document.getElementById('matieres-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${filtered.length} Matière${filtered.length > 1 ? 's' : ''}`;
+  }
+
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 2.5rem; color:var(--text-muted);">
       <div style="font-size:1.5rem; margin-bottom:0.5rem;">🔍</div>
-      Aucune matière ne correspond aux critères sélectionnés (Niveau: <strong>${niveau || 'Tous'}</strong>, Section: <strong>${section || 'Toutes'}</strong>).
+      Aucune matière ne correspond aux critères sélectionnés (Niveau: <strong>${niveau || 'Tous'}</strong>, Section: <strong>${section || 'Toutes'}</strong>, Semestre: <strong>${semestre ? 'S' + semestre : 'Tous'}</strong>).
     </td></tr>`;
     return;
   }
@@ -2185,15 +2267,28 @@ function appliquerFiltresNotes() {
   }
 }
 
+function filtrerEtudiantsGrilleParClasse(classe) {
+  state.notesFilters.classe = classe || '';
+  const journalClasseSelect = document.getElementById('notes-filter-classe');
+  if (journalClasseSelect) journalClasseSelect.value = state.notesFilters.classe;
+  const grilleClasseSelect = document.getElementById('notes-grille-classe-select');
+  if (grilleClasseSelect) grilleClasseSelect.value = state.notesFilters.classe;
+
+  majSelecteursFiltresNotes();
+  renderGrilleSelectorAndActiveStudent();
+}
+
 function reinitialiserFiltresNotes() {
   state.notesFilters = { classe: '', matiere: '', type: '', semestre: '', search: '' };
   const classeSelect = document.getElementById('notes-filter-classe');
+  const grilleClasseSelect = document.getElementById('notes-grille-classe-select');
   const matiereSelect = document.getElementById('notes-filter-matiere');
   const typeSelect = document.getElementById('notes-filter-type');
   const semestreSelect = document.getElementById('notes-filter-semestre');
   const searchInput = document.getElementById('notes-filter-search');
 
   if (classeSelect) classeSelect.value = '';
+  if (grilleClasseSelect) grilleClasseSelect.value = '';
   if (matiereSelect) matiereSelect.value = '';
   if (typeSelect) typeSelect.value = '';
   if (semestreSelect) semestreSelect.value = '';
@@ -2212,28 +2307,48 @@ function majSelecteursFiltresNotes(resetValues = false) {
   const user = state.currentUser;
   const isEnseignant = user && user.role === 'ENSEIGNANT';
   const classeSelect = document.getElementById('notes-filter-classe');
+  const grilleClasseSelect = document.getElementById('notes-grille-classe-select');
   const matiereSelect = document.getElementById('notes-filter-matiere');
 
-  let matieresList = isEnseignant ? getTeacherMatieresList(user) : state.matieres;
+  // 1. Liste des classes autorisées
+  let classesDisponibles = [];
+  if (isEnseignant) {
+    const teacherMatieres = getTeacherMatieresList(user);
+    classesDisponibles = Array.from(new Set(teacherMatieres.map(m => m.classe).filter(Boolean))).sort();
+  } else {
+    const clsSet = new Set();
+    state.etudiants.forEach(e => { if (e.classe) clsSet.add(e.classe); });
+    state.matieres.forEach(m => { if (m.classe) clsSet.add(m.classe); });
+    classesDisponibles = Array.from(clsSet).sort();
+  }
 
+  const currentClassVal = resetValues ? '' : (state.notesFilters.classe || '');
+
+  const classesOptionsHtml = `<option value="">Toutes les promotions (${classesDisponibles.length})</option>` +
+    classesDisponibles.map(c => `<option value="${c}" ${c === currentClassVal ? 'selected' : ''}>${c}</option>`).join('');
+
+  if (classeSelect) classeSelect.innerHTML = classesOptionsHtml;
+  if (grilleClasseSelect) grilleClasseSelect.innerHTML = classesOptionsHtml;
+
+  // 2. Matières (filtrées selon la classe et/ou le semestre)
+  let matieresList = isEnseignant ? getTeacherMatieresList(user) : state.matieres;
   if (state.notesFilters.classe) {
     matieresList = matieresList.filter(m => m.classe === state.notesFilters.classe);
   }
   if (state.notesFilters.semestre) {
-    matieresList = matieresList.filter(m => String(m.semestre) === String(state.notesFilters.semestre));
+    const sem = String(state.notesFilters.semestre);
+    matieresList = matieresList.filter(m => {
+      const s = String(m.semestre || '');
+      if (sem === '1') return ['1', 'S1', 'S3', 'S5'].includes(s);
+      if (sem === '2') return ['2', 'S2', 'S4', 'S6'].includes(s);
+      return s === sem;
+    });
   }
 
   if (matiereSelect) {
-    const currentMatVal = resetValues ? '' : matiereSelect.value;
+    const currentMatVal = resetValues ? '' : (matiereSelect.value || state.notesFilters.matiere || '');
     matiereSelect.innerHTML = `<option value="">Toutes les matières (${matieresList.length})</option>` +
       matieresList.map(m => `<option value="${m.id}" ${m.id === currentMatVal ? 'selected' : ''}>${m.code} - ${m.intitule} (${m.classe || 'N/A'} - S${m.semestre || 1})</option>`).join('');
-  }
-
-  if (classeSelect && isEnseignant) {
-    const teacherClasses = Array.from(new Set(getTeacherMatieresList(user).map(m => m.classe).filter(Boolean)));
-    const currentClassVal = resetValues ? '' : classeSelect.value;
-    classeSelect.innerHTML = `<option value="">Toutes vos classes (${teacherClasses.length})</option>` +
-      teacherClasses.map(c => `<option value="${c}" ${c === currentClassVal ? 'selected' : ''}>${c}</option>`).join('');
   }
 }
 
@@ -2372,9 +2487,12 @@ async function renderDeliberationsTab() {
       } catch (e) { /* ignore fallback */ }
     }
 
-    // 3. Fallback par classes officielles
+    // 3. Fallback par classes de l'établissement
     if (deliberations.length === 0) {
-      const allClasses = ['L1-INFO', 'L2-INFO', 'L3-INFO', 'ING1-INFO', 'ING2-GL', 'M1-GL', 'M1-SPI'];
+      const classSet = new Set(['L1-INFO', 'L2-INFO', 'L3-INFO', 'ING1-INFO', 'ING2-GL', 'M1-GL', 'M1-SPI']);
+      state.etudiants.forEach(e => { if (e.classe) classSet.add(e.classe); });
+      state.matieres.forEach(m => { if (m.classe) classSet.add(m.classe); });
+      const allClasses = Array.from(classSet);
       const responses = await Promise.all(
         allClasses.map(cls => apiFetch(`/deliberations/classe/${encodeURIComponent(cls)}`).catch(() => null))
       );
@@ -2435,7 +2553,7 @@ function renderDeliberationsContent() {
 
   // 3. Filtre par Section / Filière
   if (filters.section && filters.section !== 'ALL') {
-    list = list.filter(d => (d.etudiant.classe || '').includes(filters.section));
+    list = list.filter(d => matchSectionHelper(d.etudiant.classe, filters.section));
   }
 
   // 4. Filtre par Classe Spécifique
@@ -2575,9 +2693,15 @@ function renderDeliberationsContent() {
           <label style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Section / Filière :</label>
           <select id="delib-filter-section" class="filter-select" onchange="changerFiltreDelibSection(this.value)">
             <option value="ALL" ${filters.section === 'ALL' ? 'selected' : ''}>Toutes les sections</option>
-            <option value="INFO" ${filters.section === 'INFO' ? 'selected' : ''}>INFO - Informatique</option>
-            <option value="GL" ${filters.section === 'GL' ? 'selected' : ''}>GL - Génie Logiciel</option>
-            <option value="SPI" ${filters.section === 'SPI' ? 'selected' : ''}>SPI - Systèmes Pervasifs & IoT</option>
+            <option value="INFO" ${filters.section === 'INFO' ? 'selected' : ''}>💻 Informatique (INFO/GLSI)</option>
+            <option value="SISE" ${filters.section === 'SISE' ? 'selected' : ''}>📡 Systèmes Intelligents & Syst. Embarqués (SISE)</option>
+            <option value="EEA" ${filters.section === 'EEA' ? 'selected' : ''}>⚡ Électronique, Électrotechnique & Auto (EEA)</option>
+            <option value="GC" ${filters.section === 'GC' ? 'selected' : ''}>🏗️ Génie Civil (GC)</option>
+            <option value="GM" ${filters.section === 'GM' ? 'selected' : ''}>⚙️ Génie Mécanique (GM)</option>
+            <option value="EMT" ${filters.section === 'EMT' ? 'selected' : ''}>🔧 Électromécanique (EMT)</option>
+            <option value="GEFC" ${filters.section === 'GEFC' ? 'selected' : ''}>🏢 Génie Énergétique & Fluides (GEFC)</option>
+            <option value="GL" ${filters.section === 'GL' ? 'selected' : ''}>💻 Génie Logiciel (GL Ing/Mastère)</option>
+            <option value="SPI" ${filters.section === 'SPI' ? 'selected' : ''}>🌐 Systèmes Pervasifs & IoT (SPI)</option>
           </select>
         </div>
 
@@ -2585,13 +2709,9 @@ function renderDeliberationsContent() {
           <label style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Promotion :</label>
           <select id="delib-filter-classe" class="filter-select" onchange="changerFiltreDelibClasse(this.value)">
             <option value="ALL" ${filters.classe === 'ALL' ? 'selected' : ''}>Toutes les promotions</option>
-            <option value="L1-INFO" ${filters.classe === 'L1-INFO' ? 'selected' : ''}>L1-INFO (Licence 1)</option>
-            <option value="L2-INFO" ${filters.classe === 'L2-INFO' ? 'selected' : ''}>L2-INFO (Licence 2)</option>
-            <option value="L3-INFO" ${filters.classe === 'L3-INFO' ? 'selected' : ''}>L3-INFO (Licence 3)</option>
-            <option value="ING1-INFO" ${filters.classe === 'ING1-INFO' ? 'selected' : ''}>ING1-INFO (Ingénieur 1)</option>
-            <option value="ING2-GL" ${filters.classe === 'ING2-GL' ? 'selected' : ''}>ING2-GL (Ingénieur 2)</option>
-            <option value="M1-GL" ${filters.classe === 'M1-GL' ? 'selected' : ''}>M1-GL (Mastère Pro)</option>
-            <option value="M1-SPI" ${filters.classe === 'M1-SPI' ? 'selected' : ''}>M1-SPI (Mastère Recherche)</option>
+            ${Array.from(new Set(globalDeliberationsCache.map(d => d.etudiant.classe).filter(Boolean))).sort().map(c => `
+              <option value="${c}" ${filters.classe === c ? 'selected' : ''}>${c}</option>
+            `).join('')}
           </select>
         </div>
 
@@ -2715,12 +2835,12 @@ function genererSectionsDeliberationHtml(deliberationsList, filters) {
     });
   }
 
-  // 3. Catégorie Licence 1 (Explicitement isolée selon la demande du user)
+  // 3. Catégorie Licence 1
   const l1List = deliberationsList.filter(d => (d.etudiant.classe || '').startsWith('L1'));
   if (l1List.length > 0 && (filters.cycle === 'ALL' || filters.cycle === 'LICENCE') && (filters.niveau === 'ALL' || filters.niveau === 'L1')) {
     groupes.push({
-      titre: '🎓 Licence 1 Informatique (L1-INFO) - 1ère Année LMD',
-      description: 'Formation fondamentale LMD - Semestre 1 & Semestre 2',
+      titre: '🎓 Licence 1 (1ère Année LMD - Toutes filières)',
+      description: 'Tronc commun & formations fondamentales LMD - Semestre 1 & Semestre 2',
       badgeClass: 'badge-gray',
       items: l1List
     });
@@ -2730,8 +2850,8 @@ function genererSectionsDeliberationHtml(deliberationsList, filters) {
   const licencesRest = deliberationsList.filter(d => (d.etudiant.classe || '').startsWith('L2') || (d.etudiant.classe || '').startsWith('L3'));
   if (licencesRest.length > 0 && (filters.cycle === 'ALL' || filters.cycle === 'LICENCE') && filters.niveau !== 'L1') {
     groupes.push({
-      titre: '🎓 Licences LMD Supérieures (L2-INFO & L3-INFO)',
-      description: 'Parcours Licence Informatique (Spécialités Génie Logiciel et Systèmes)',
+      titre: '🎓 Licences LMD Supérieures (L2 & L3 - Toutes filières)',
+      description: 'Parcours Licence LMD spécialisés (Informatique, SISE, EEA, GC, GM, EMT, GEFC)',
       badgeClass: 'badge-gray',
       items: licencesRest
     });
