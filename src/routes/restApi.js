@@ -307,7 +307,7 @@ async function handleRestRoutes(req, res, pathname, query, body) {
   }
 
   if (pathname === '/api/v1/matieres' && req.method === 'POST') {
-    const { code, intitule, coefficient, credits, hasTP, enseignant, classe, semestre, uniteEnseignement } = body || {};
+    const { code, intitule, coefficient, credits, hasTP, enseignant, classe, semestre, uniteEnseignement, regime, formule } = body || {};
 
     if (!code || !intitule || coefficient === undefined || credits === undefined) {
       return sendJson(400, {
@@ -343,6 +343,8 @@ async function handleRestRoutes(req, res, pathname, query, body) {
       classe: classe ? classe.trim() : 'L3-INFO',
       semestre: semestre ? Number(semestre) : 1,
       uniteEnseignement: uniteEnseignement || 'UE Générale',
+      regime: regime || (hasTP ? 'RM' : 'RM'),
+      formule: formule || (hasTP ? '(DS+2TP+7EX)/10' : '(3DS+7EX)/10'),
       isActive: true
     });
 

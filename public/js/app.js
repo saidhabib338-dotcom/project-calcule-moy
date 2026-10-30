@@ -665,9 +665,16 @@ function renderMatieresTab() {
             🎓 ${m.classe || `${mNiveau}-${mSection}`}
           </span>
         </td>
-        <td>Coef. ${m.coefficient}</td>
-        <td>${m.credits} ECTS</td>
-        <td>${m.hasTP ? '<span class="badge badge-admis">Oui (70/20/10)</span>' : '<span class="badge badge-gray">Non (80/20)</span>'}</td>
+        <td><strong style="color:white; font-family:var(--font-mono);">Coef. ${m.coefficient}</strong></td>
+        <td><strong style="color:#38bdf8; font-family:var(--font-mono);">${m.credits}</strong> ECTS</td>
+        <td>
+          <span class="badge ${m.hasTP ? 'badge-admis' : (m.regime === 'CC' ? 'badge-code' : 'badge-gray')}" style="font-size:0.75rem; letter-spacing:0.02em;">
+            ${m.formule || (m.hasTP ? '(DS+2TP+7EX)/10' : '(3DS+7EX)/10')}
+          </span>
+          <div style="font-size:0.68rem; color:var(--text-muted); margin-top:2px;">
+            ${m.regime || (m.hasTP ? 'RM' : 'RM')} ${m.hasTP ? '• avec TP' : ''}
+          </div>
+        </td>
         <td><span style="color:var(--primary); font-size:0.8rem;">${m.enseignant || 'Non assigné'}</span></td>
         <td>
           <div style="display:flex; gap:0.35rem; align-items:center;">
@@ -1427,13 +1434,16 @@ function genererLignesTableauGrille(matieresList, isEnseignant = false) {
           data-coef="${m.coefficient}" 
           data-credits="${m.credits}" 
           data-hastp="${hasTp}"
+          data-regime="${m.regime || (hasTp ? 'RM' : 'RM')}"
+          data-formule="${m.formule || (hasTp ? '(DS+2TP+7EX)/10' : '(3DS+7EX)/10')}"
           data-semestre="${m.semestre || 1}"
           data-current-moyenne="${moyVal}">
         <td>
           <div style="font-weight:600; color:white;">${m.intitule}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); display:flex; gap:0.5rem; align-items:center; margin-top:0.15rem; flex-wrap:wrap;">
+          <div style="font-size:0.75rem; color:var(--text-muted); display:flex; gap:0.4rem; align-items:center; margin-top:0.2rem; flex-wrap:wrap;">
             <span class="badge badge-code" style="font-size:0.7rem;">${m.code}</span>
             <span>Semestre ${m.semestre || 1}</span>
+            ${m.formule ? `<span class="badge badge-gray" style="font-size:0.68rem; color:#38bdf8; background:rgba(56,189,248,0.08);">${m.formule}</span>` : ''}
             ${!isEnseignant ? `<span>• Resp : ${m.enseignant || 'Non assigné'}</span>` : ''}
           </div>
         </td>
@@ -1920,6 +1930,8 @@ function calculerLigneGrille(inputElement) {
 
   const matId = row.dataset.matiereId;
   const hasTp = row.dataset.hastp === 'true';
+  const regime = row.dataset.regime || 'RM';
+  const formule = row.dataset.formule || '';
 
   const dsInput = row.querySelector('input[data-type="DS"]');
   const examInput = row.querySelector('input[data-type="EXAMEN"]');
@@ -1938,11 +1950,25 @@ function calculerLigneGrille(inputElement) {
   const tpVal = getEffVal(tpInput);
 
   let moy = 0;
-  if (hasTp) {
-    // 70% Exam + 20% DS + 10% TP
+  if (regime === 'CC') {
+    const hasDs = dsInput && dsInput.value !== '';
+    const hasExam = examInput && examInput.value !== '';
+    if (hasDs && hasExam) {
+      moy = (dsVal + examVal) / 2;
+    } else if (hasExam) {
+      moy = examVal;
+    } else if (hasDs) {
+      moy = dsVal;
+    } else {
+      moy = tpVal;
+    }
+  } else if (formule === '(DS+2TP+7EX)/10') {
+    moy = (examVal * 0.70) + (tpVal * 0.20) + (dsVal * 0.10);
+  } else if (formule === '(3DS+7EX)/10') {
+    moy = (examVal * 0.70) + (dsVal * 0.30);
+  } else if (hasTp) {
     moy = (examVal * 0.70) + (dsVal * 0.20) + (tpVal * 0.10);
   } else {
-    // 80% Exam + 20% DS
     moy = (examVal * 0.80) + (dsVal * 0.20);
   }
 

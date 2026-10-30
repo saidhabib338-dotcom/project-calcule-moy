@@ -53,11 +53,28 @@ function calculerMoyenneMatiere(matiere, notesEtudiantMatiere = [], allClassMati
   const hasAnyNote = Boolean(noteExam || noteDS || noteTP);
 
   let moyenne = 0;
-  if (matiere.hasTP) {
-    // Formule 10a: (Examen x 70%) + (DS x 20%) + (TP x 10%)
+  if (matiere.regime === 'CC') {
+    // Régime Contrôle Continu : (DS1 + DS2)/2 ou moyenne des épreuves passées
+    if (examVal !== null && dsVal !== null) {
+      moyenne = (effExam + effDS) / 2;
+    } else if (examVal !== null) {
+      moyenne = effExam;
+    } else if (dsVal !== null) {
+      moyenne = effDS;
+    } else if (tpVal !== null) {
+      moyenne = effTP;
+    }
+  } else if (matiere.formule === '(DS+2TP+7EX)/10') {
+    // Formule officielle ISSAT SOUSSE avec TP : (DS + 2TP + 7EX)/10
+    moyenne = (effExam * 0.70) + (effTP * 0.20) + (effDS * 0.10);
+  } else if (matiere.formule === '(3DS+7EX)/10') {
+    // Formule officielle ISSAT SOUSSE sans TP : (3DS + 7EX)/10
+    moyenne = (effExam * 0.70) + (effDS * 0.30);
+  } else if (matiere.hasTP) {
+    // Formule standard Sujet 2 : (Examen x 70%) + (DS x 20%) + (TP x 10%)
     moyenne = (effExam * 0.70) + (effDS * 0.20) + (effTP * 0.10);
   } else {
-    // Formule 10b: (Examen x 80%) + (DS x 20%)
+    // Formule standard Sujet 2 sans TP : (Examen x 80%) + (DS x 20%)
     moyenne = (effExam * 0.80) + (effDS * 0.20);
   }
 
@@ -65,6 +82,9 @@ function calculerMoyenneMatiere(matiere, notesEtudiantMatiere = [], allClassMati
   const estValidee = moyenneArrondie >= 10.0;
   const creditsObtenus = estValidee ? Number(matiere.credits) : 0;
   const semestre = getMatiereSemestre(matiere, allClassMatieres);
+
+  const regimeStr = matiere.regime || (matiere.hasTP ? 'RM' : 'RM');
+  const formuleStr = matiere.formule || (matiere.hasTP ? '(DS+2TP+7EX)/10' : '(3DS+7EX)/10');
 
   return {
     matiereId: matiere.id,
@@ -74,6 +94,8 @@ function calculerMoyenneMatiere(matiere, notesEtudiantMatiere = [], allClassMati
     coefficient: Number(matiere.coefficient),
     credits: Number(matiere.credits),
     hasTP: Boolean(matiere.hasTP),
+    regime: regimeStr,
+    formule: formuleStr,
     enseignant: matiere.enseignant || 'Non assigné',
     classe: matiere.classe,
     semestre,

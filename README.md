@@ -67,7 +67,7 @@ node server.js
 * **Contrat SOAP WSDL** : [http://localhost:5000/soap?wsdl](http://localhost:5000/soap?wsdl)
 
 ### Comptes de démonstration rapide (disponibles en 1 clic sur l'écran d'accueil) :
-* 🎓 **Espace Étudiant** : `sarah.mansouri@etud.univ.tn` / `etudiant123`
+* 🎓 **Espace Étudiant** : `sarah.mansouri@myuniversity.tn` / `etudiant123`
 * 👨‍🏫 **Espace Enseignant** : `prof.martin@univ.tn` / `prof123`
 * 🏛️ **Espace Scolarité** : `admin@scolarite.univ.tn` / `admin123`
 

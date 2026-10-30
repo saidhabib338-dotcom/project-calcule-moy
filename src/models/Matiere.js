@@ -52,6 +52,16 @@ const matiereSchema = new mongoose.Schema({
     enum: [1, 2],
     default: 1
   },
+  regime: {
+    type: String,
+    enum: ['RM', 'CC', 'SOUT'],
+    default: 'RM'
+  },
+  formule: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   isActive: {
     type: Boolean,
     default: true
