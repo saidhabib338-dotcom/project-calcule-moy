@@ -58,3 +58,4 @@ seedPlansEtudes().catch(err => {
   console.error('❌ Erreur lors du seed des plans :', err);
   process.exit(1);
 });
+

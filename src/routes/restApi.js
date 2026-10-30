@@ -418,20 +418,13 @@ async function handleRestRoutes(req, res, pathname, query, body) {
   // ----------------------------------------------------
   // CATALOGUE DES PLANS D'ETUDES OFFICIELS ISSAT (31 Plans / 504 Matières)
   // ----------------------------------------------------
-  // 3b. CATALOGUE OFFICIEL DES PLANS D'ÉTUDES (MONGODB + FALLBACK)
+  // 3b. CATALOGUE OFFICIEL DES PLANS D'ÉTUDES (MONGODB)
   // ----------------------------------------------------
   if (pathname === '/api/v1/plans-etudes' && req.method === 'GET') {
     let list = db.collection('plans_etudes').getAll();
 
-    // Si la collection MongoDB est vide, repli sur le fichier JSON local
     if (!list || list.length === 0) {
-      const plansPath = path.join(__dirname, '../data/plans_etude_issat_complets.json');
-      if (fs.existsSync(plansPath)) {
-        const plansData = JSON.parse(fs.readFileSync(plansPath, 'utf8'));
-        list = Object.entries(plansData).map(([key, val]) => ({ key, ...val }));
-      } else {
-        return sendJson(404, { success: false, error: 'Catalogue des plans d\'études non disponible' });
-      }
+      return sendJson(404, { success: false, error: 'Catalogue des plans d\'études non disponible' });
     }
 
     const { departement, annee, specialite, recherche } = query;

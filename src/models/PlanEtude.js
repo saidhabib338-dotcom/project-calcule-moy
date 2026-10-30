@@ -69,3 +69,4 @@ planEtudeSchema.index({ annee: 1, departement: 1 });
 planEtudeSchema.index({ filiere: 'text', specialite: 'text' });
 
 module.exports = mongoose.model('PlanEtude', planEtudeSchema);
+
